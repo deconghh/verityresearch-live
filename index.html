@@ -524,6 +524,38 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 @media (max-width:1024px){.mkt-grid{grid-template-columns:1fr}.mkt-kv{border-right:0;border-bottom:1px solid var(--border-hairline)}}
 @media (min-width:1025px){.topic-panel{min-height:560px}}
 .ai-full{white-space:normal;height:auto;min-height:44px;padding:10px 14px;line-height:1.3;text-align:center}
+/* hero side: small coin + news */
+.hero-side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.side-top{display:grid;grid-template-columns:190px 1fr;gap:16px;align-items:start}
+.coin-wrap{min-width:0}
+.hero-side .coin-stage{width:190px;max-width:190px;aspect-ratio:1/1;margin:0;justify-self:start}
+.hero-side .coin-caption{display:none}
+.coin-note{font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);margin-top:6px;line-height:1.4}
+.lead-story{min-width:0}
+.lead-link{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:var(--radius-element);padding:12px;background:var(--bg-surface);transition:border-color 150ms}
+.lead-link:hover{border-color:var(--accent-blue-text)}
+.lead-link img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-inner);background:var(--bg-elevated)}
+.lead-title{font-size:1rem;font-weight:600;line-height:1.3}
+.lead-sum{font-size:.82rem;color:var(--text-muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-panel{border-top:1px solid var(--border-hairline);padding-top:12px;min-width:0}
+.news-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.news-head h2{font-size:1.05rem;letter-spacing:-.01em}
+.news-head .tick-status{white-space:normal}
+.news-filters{margin-top:10px;max-width:100%;overflow-x:auto;flex-wrap:nowrap}
+.news-filters button{flex:none}
+.news-list{list-style:none;margin:8px 0 0;padding:0}
+.news-list li{border-bottom:1px solid var(--border-hairline)}
+.news-item{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;padding:9px 0;text-decoration:none;color:var(--text-primary);transition:background-color 150ms}
+.news-item:hover{background:var(--bg-surface)}
+.news-item img,.news-noimg{width:56px;height:40px;object-fit:cover;border-radius:var(--radius-inner);background:var(--bg-elevated);display:block}
+.news-noimg{border:1px solid var(--border-hairline)}
+.news-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.news-title{font-size:.86rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-foot{margin-top:8px}
+@media (max-width:1024px){.hero-side{margin-top:24px}}
+@media (max-width:520px){.side-top{grid-template-columns:120px 1fr}.hero-side .coin-stage{width:120px;max-width:120px}}
+.panel-head>*{min-width:0}
+.panel-head .real,.panel-head .demo,.panel-head .tag{white-space:normal;overflow-wrap:anywhere;max-width:100%}
 </style>
 </head>
 <body>
@@ -587,11 +619,25 @@ a.tick-item:hover .sym{color:var(--text-primary)}
           <a class="btn" href="#walkthrough">See a paid research run</a>
         </div>
       </div>
+      <div class="hero-side">
+        <div class="side-top">
+          <div class="coin-wrap">
       <div class="coin-stage" id="coinStage">
-        <div class="coin-fallback" aria-hidden="true">
-          <svg viewBox="0 0 200 200"><defs><radialGradient id="cg" cx="40%" cy="35%"><stop offset="0" stop-color="#f6dc8a"/><stop offset=".6" stop-color="#c39a3a"/><stop offset="1" stop-color="#6d531c"/></radialGradient></defs><circle cx="100" cy="100" r="92" fill="#3a2d10"/><circle cx="100" cy="100" r="86" fill="url(#cg)"/><circle cx="100" cy="100" r="70" fill="none" stroke="#7a5d20" stroke-width="1.5"/><circle cx="100" cy="100" r="64" fill="none" stroke="#7a5d20" stroke-width=".8"/><text x="100" y="128" text-anchor="middle" font-size="84" font-family="Space Grotesk,sans-serif" font-weight="700" fill="#5b4413">₿</text></svg>
+              <div class="coin-fallback" aria-hidden="true">
+                <svg viewBox="0 0 200 200"><defs><radialGradient id="cg" cx="40%" cy="35%"><stop offset="0" stop-color="#f6dc8a"/><stop offset=".6" stop-color="#c39a3a"/><stop offset="1" stop-color="#6d531c"/></radialGradient></defs><circle cx="100" cy="100" r="92" fill="#3a2d10"/><circle cx="100" cy="100" r="86" fill="url(#cg)"/><circle cx="100" cy="100" r="70" fill="none" stroke="#7a5d20" stroke-width="1.5"/><circle cx="100" cy="100" r="64" fill="none" stroke="#7a5d20" stroke-width=".8"/><text x="100" y="128" text-anchor="middle" font-size="84" font-family="Space Grotesk,sans-serif" font-weight="700" fill="#5b4413">₿</text></svg>
+              </div>
+              <div class="coin-caption"><span>Editorial visual. Verity pays in USDC on Arc Testnet, not bitcoin.</span><span class="hint" id="coinHint">Drag to tilt · click to spin</span></div>
+            </div>
+            <p class="coin-note">Editorial visual. Verity pays in USDC on Arc Testnet, not bitcoin.</p>
+          </div>
+          <article class="lead-story" id="leadStory" aria-label="Top crypto story"></article>
         </div>
-        <div class="coin-caption"><span>Editorial visual. Verity pays in USDC on Arc Testnet, not bitcoin.</span><span class="hint" id="coinHint">Drag to tilt · click to spin</span></div>
+        <section class="news-panel" aria-labelledby="newsTitle">
+          <div class="news-head"><h2 id="newsTitle">Crypto news</h2><span class="tick-status" id="newsStatus" aria-live="polite">Loading headlines…</span></div>
+          <div class="seg news-filters" id="newsFilters" role="group" aria-label="Filter news by topic"></div>
+          <ol class="news-list" id="newsList"><li class="empty">Loading headlines…</li></ol>
+          <p class="label news-foot">Headlines and summaries link to the publishers. Refreshed every 10 minutes.</p>
+        </section>
       </div>
     </div>
     <dl class="telemetry" aria-label="Configured values">
@@ -1689,6 +1735,34 @@ $('#fcRun').addEventListener('click',runForecast);
     if(e.key==='Home'){e.preventDefault();set(320);save();}if(e.key==='End'){e.preventDefault();set(900);save();}});
   h.addEventListener('dblclick',()=>{set(440);save();});
   addEventListener('resize',()=>set(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))||440));})();
+/* ---------- Crypto news (publisher RSS via Verity's Worker; Hacker News fallback) ---------- */
+const NEWS={items:[],src:'',filter:'all',fetched:0,timer:0};
+const NEWS_TOPICS=[['all','All',null],['btc','Bitcoin',/bitcoin|\bbtc\b|satoshi|miner/i],['eth','Ethereum',/ether|\beth\b|vitalik|layer[- ]?2|rollup/i],['reg','Regulation',/sec\b|regulat|cftc|law|bill|congress|court|lawsuit|ban|tax|policy|senat/i],['mkt','Markets',/etf|price|rally|drop|fall|surge|market|trader|inflow|outflow|liquidat|stock|fed\b|rate/i],['pm','Prediction markets',/prediction market|polymarket|kalshi|gemini|bet|odds|forecast/i]];
+function agoStr(iso){if(!iso)return '';const m=Math.round((Date.now()-Date.parse(iso))/6e4);if(m<1)return 'just now';if(m<60)return m+'m ago';const h=Math.round(m/60);if(h<48)return h+'h ago';return Math.round(h/24)+'d ago';}
+async function newsFromWorker(){const r=await fetch(GAI.endpoint.replace(/\/review$/,'/news'),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(!Array.isArray(j.items)||!j.items.length)throw new Error('no items');
+  return {items:j.items,src:'Publisher feeds: '+(j.sources||[]).filter(s=>s.items).map(s=>s.name).join(', ')};}
+async function newsFromHN(){const qs=['bitcoin','ethereum','cryptocurrency','stablecoin','crypto','coinbase','solana','blockchain'];const since=Math.floor(Date.now()/1000)-10*86400;
+  const ON=/\b(bitcoin|btc|ethereum|ether|eth|cryptocurrenc(y|ies)|crypto|stablecoins?|usdc|usdt|tether|defi|blockchain|solana|xrp|ripple|coinbase|binance|kraken|gemini|crypto ?etfs?|memecoins?|tokens?|web3|on-?chain|wallet|polymarket|kalshi|prediction markets?)\b/i,OFF=/cryptograph|encrypt|cryptic/i;
+  const lists=await Promise.all(qs.map(q=>fetch(`https://hn.algolia.com/api/v1/search_by_date?query=${q}&tags=story&restrictSearchableAttributes=title&numericFilters=created_at_i>${since},points>1&hitsPerPage=30`).then(r=>r.ok?r.json():{hits:[]}).catch(()=>({hits:[]}))));
+  const seen=new Set();const items=lists.flatMap(l=>l.hits||[]).filter(h=>h.url&&h.title&&ON.test(h.title)&&!OFF.test(h.title)&&!/^(show|ask|tell) hn/i.test(h.title)&&!seen.has(h.objectID)&&seen.add(h.objectID))
+    .map(h=>{let host='';try{host=new URL(h.url).hostname.replace(/^www\./,'');}catch(e){}return {title:h.title,link:h.url,source:host||'Hacker News',published:h.created_at,summary:`${h.points} points · ${h.num_comments||0} comments on Hacker News`,image:null};})
+    .sort((a,b)=>Date.parse(b.published)-Date.parse(a.published)).slice(0,40);
+  if(!items.length)throw new Error('no items');return {items,src:'Hacker News crypto stories (publisher feeds unavailable)'};}
+function safeHref(u){try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:'#';}catch(e){return '#';}}
+function renderNews(){const list=$('#newsList'),lead=$('#leadStory');const re=(NEWS_TOPICS.find(t=>t[0]===NEWS.filter)||[])[2];
+  const items=re?NEWS.items.filter(i=>re.test(i.title+' '+(i.summary||''))):NEWS.items;
+  $$('#newsFilters button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===NEWS.filter));
+  if(!NEWS.items.length){list.innerHTML='<li class="empty">Loading headlines…</li>';return;}
+  const top=items[0];
+  lead.innerHTML=top?`<a class="lead-link" href="${esc(safeHref(top.link))}" target="_blank" rel="noopener noreferrer">${top.image?`<img src="${esc(safeHref(top.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<span class="label">${esc(top.source)} · ${agoStr(top.published)}</span><span class="lead-title">${esc(top.title)}</span>${top.summary?`<span class="lead-sum">${esc(top.summary)}</span>`:''}</a>`:'<p class="muted">No headlines in this topic right now.</p>';
+  list.innerHTML=items.slice(1,9).map(i=>`<li><a class="news-item" href="${esc(safeHref(i.link))}" target="_blank" rel="noopener noreferrer">${i.image?`<img src="${esc(safeHref(i.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span class="news-noimg" aria-hidden="true"></span>'}<span class="news-text"><span class="news-title">${esc(i.title)}</span><span class="label">${esc(i.source)} · ${agoStr(i.published)}</span></span></a></li>`).join('')||(top?'':'<li class="empty">No headlines in this topic right now.</li>');
+  const s=$('#newsStatus');s.className='tick-status live';s.innerHTML=`<span class="dot" aria-hidden="true"></span>Live · ${esc(NEWS.src)}`;}
+async function loadNews(){if(document.hidden)return;
+  try{let r;try{r=await newsFromWorker();}catch(e){r=await newsFromHN();}NEWS.items=r.items;NEWS.src=r.src;NEWS.fetched=Date.now();renderNews();}
+  catch(e){if(!NEWS.items.length){$('#newsList').innerHTML='<li class="empty">Headlines are unavailable right now. Retrying in a few minutes.</li>';$('#leadStory').innerHTML='';const s=$('#newsStatus');s.className='tick-status stale';s.textContent='News unavailable · retrying';}}}
+(function newsInit(){$('#newsFilters').innerHTML=NEWS_TOPICS.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${k==='all'}">${l}</button>`).join('');
+  $$('#newsFilters button').forEach(b=>b.addEventListener('click',()=>{NEWS.filter=b.dataset.f;renderNews();}));
+  loadNews();NEWS.timer=setInterval(loadNews,10*60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-NEWS.fetched>10*60000)loadNews();});})();
 /* ---------- Reconciler ledger (demo fixtures) ---------- */
 const STATUS={ok:['ok','✓ Matched & verified'],pnd:['no','✕ Paid, not delivered'],dnp:['warn','! Delivered, not paid'],dup:['info','≡ Duplicate, deduplicated'],nonce:['info','≡ Replay blocked, nonce used'],mis:['no','✕ Mismatched request']};
 const FORECAST_REQ={...REQ,resource:'/v1/catalog/cat-point-forecast-v1',amount:'20000',request_id:'req-nyc-0002',expires_at:'2026-11-18T01:12:00Z'};
