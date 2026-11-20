@@ -760,7 +760,7 @@ const TICKER=[
   s.onload=()=>{try{build();}catch(e){console.warn(e);fail();}};s.onerror=fail;
   document.head.appendChild(s);
   function btc(g,m){ // vector bitcoin mark, independent of font coverage
-    const u=m/512;g.save();g.translate(m,m);g.rotate(0.24);g.scale(u,u);
+    const u=m/512;g.save();g.translate(m,m);g.scale(u,u);
     const bar=(x,y,w,h)=>g.fillRect(x,y,w,h);
     bar(-60,-250,34,80);bar(10,-250,34,80);bar(-60,170,34,80);bar(10,170,34,80);
     g.beginPath();g.moveTo(-130,-180);g.lineTo(40,-180);g.bezierCurveTo(150,-180,175,-105,145,-55);g.bezierCurveTo(130,-30,110,-18,90,-12);
@@ -806,7 +806,7 @@ const TICKER=[
     const panel=(col,x,y,z,w,h,i)=>{const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({color:new T.Color(col).multiplyScalar(i),side:T.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);env.add(m);};
     panel(0xffe2b0,-3,3,3,4,2,3.2);panel(0x2e5cff,4,-1,-2,2,4,2.4);panel(0xffffff,0,4.5,0,6,1,1.4);panel(0x00c853,-4,-3,1,1.5,1.5,1.1);
     scene.environment=pm.fromScene(env,.04).texture;
-    const [fc,fb]=faceTexture();const ft=new T.CanvasTexture(fc),fbt=new T.CanvasTexture(fb);ft.encoding=T.sRGBEncoding;ft.anisotropy=4;
+    const [fc,fb]=faceTexture();const ft=new T.CanvasTexture(fc),fbt=new T.CanvasTexture(fb);ft.encoding=T.sRGBEncoding;ft.anisotropy=4;[ft,fbt].forEach(t=>{t.center.set(.5,.5);t.rotation=Math.PI/2;});
     const et=new T.CanvasTexture(edgeTexture());et.wrapS=T.RepeatWrapping;et.repeat.set(5,1);
     const faceM=new T.MeshStandardMaterial({map:ft,bumpMap:fbt,bumpScale:.035,metalness:.92,roughness:.34,envMapIntensity:1.15});
     const edgeM=new T.MeshStandardMaterial({color:0xb8bcc4,bumpMap:et,bumpScale:.02,roughnessMap:et,metalness:1,roughness:.38,envMapIntensity:1.2});
@@ -822,25 +822,25 @@ const TICKER=[
     const pts=[];for(let i=0;i<36;i++){const a=i/36*Math.PI*2;pts.push(Math.cos(a)*2.15,Math.sin(a)*2.15*.34,Math.sin(a)*.2);}
     const pg=new T.BufferGeometry();pg.setAttribute('position',new T.Float32BufferAttribute(pts,3));
     const orbit=new T.Points(pg,new T.PointsMaterial({color:0x7c9bff,size:.035,transparent:true,opacity:.75}));orbit.rotation.x=-.35;scene.add(orbit);
-    let vis=true,raf=0,last=0,spin=0,vel=RM.matches?0:.45,tx=0,ty=0,cx=0,cy=0,base=RM.matches?0:.45;
+    let vis=true,raf=0,last=0,spin=0,vel=0,home=0,clock=0,tx=0,ty=0,cx=0,cy=0,sway=!RM.matches;
     function size(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix();cam.position.z=r.width/r.height<1.05?7.2:6.2;draw();}
     function draw(){renderer.render(scene,cam);}
     function loop(t){raf=0;const dt=Math.min(.05,last?(t-last)/1000:0);last=t;
-      vel+=(base-vel)*Math.min(1,dt*1.6);spin+=vel*dt;
+      clock+=dt;const target=home+(sway?Math.sin(clock*.6)*.22:0);vel+=((target-spin)*6-vel*4.2)*dt;spin+=vel*dt;
       cx+=(tx-cx)*Math.min(1,dt*5);cy+=(ty-cy)*Math.min(1,dt*5);
       grp.rotation.y=spin;grp.rotation.x=cy*.35;grp.rotation.z=-cx*.08;
       cam.position.x=cx*.35;cam.position.y=-cy*.25;cam.lookAt(0,0,0);orbit.rotation.z+=dt*.12;
       draw();
-      const moving=Math.abs(vel-base)>.002||Math.abs(tx-cx)>.001||Math.abs(ty-cy)>.001||base>0;
+      const moving=sway||Math.abs(vel)>.002||Math.abs(home-spin)>.002||Math.abs(tx-cx)>.001||Math.abs(ty-cy)>.001;
       if(vis&&moving)raf=requestAnimationFrame(loop);else last=0;}
     const kick=()=>{if(vis&&!raf)raf=requestAnimationFrame(loop);};
     stage.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;const r=stage.getBoundingClientRect();tx=(e.clientX-r.left)/r.width*2-1;ty=(e.clientY-r.top)/r.height*2-1;kick();});
     stage.addEventListener('pointerleave',()=>{tx=ty=0;kick();});
-    stage.addEventListener('click',()=>{vel+=RM.matches?0:9;if(RM.matches){spin+=Math.PI;draw();}kick();});
+    stage.addEventListener('click',()=>{home+=Math.PI*2;if(RM.matches){spin=home;draw();}kick();});
     $('#coinHint').textContent=matchMedia('(hover:hover)').matches?'Move to tilt · click to spin':'Tap to spin';
     onVisible(stage,v=>{vis=v;if(v)kick();});
     if('ResizeObserver'in window)new ResizeObserver(size).observe(stage);else window.addEventListener('resize',size);
-    RM.addEventListener&&RM.addEventListener('change',()=>{base=RM.matches?0:.45;kick();});
+    RM.addEventListener&&RM.addEventListener('change',()=>{sway=!RM.matches;kick();});
     size();kick();
   }
 })();
