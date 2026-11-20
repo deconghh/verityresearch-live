@@ -601,30 +601,21 @@ a.tick-item:hover .sym{color:var(--text-primary)}
         </div>
       </div>
       <div class="panel term-c" id="gaiPanel">
-        <div class="panel-head"><div><h3>AI second opinion</h3><p class="label" style="margin-top:2px">Google Gemini, the AI model, which is separate from Gemini Exchange · advisory only · reads the market selected above</p></div><span class="tag neutral" id="gaiTag">Optional · your key</span></div>
+        <div class="panel-head"><div><h3>AI second opinion</h3><p class="label" style="margin-top:2px">Google Gemini, the AI model, which is separate from Gemini Exchange · advisory only · reads the market selected above</p></div><span class="tag info">gemini-2.5-flash</span></div>
         <div class="gai-grid">
           <div class="gai-left">
-            <label class="label" for="gaiKey">Google Gemini API key</label>
-            <div class="gai-keyrow">
-              <input id="gaiKey" class="gai-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Google Gemini API key" aria-describedby="gaiKeyHelp">
-              <button class="btn sm" id="gaiShow" aria-pressed="false" type="button">Show</button>
-              <button class="btn sm primary" id="gaiConnect" type="button">Connect</button>
-            </div>
-            <label class="gai-check"><input type="checkbox" id="gaiRemember"> Remember on this device (stored only in this browser)</label>
-            <p class="muted gai-help" id="gaiKeyHelp">Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The key stays in your browser and is sent only to Google’s API, never to Verity or anyone else. Restrict it to <code>https://verityresearch.us/*</code> in Google Cloud, and don’t paste it into chats or commits.</p>
-            <label class="label" for="gaiModel" style="margin-top:12px;display:block">Model</label>
-            <select id="gaiModel" class="sel" data-needs-key disabled><option>Connect a key first</option></select>
+            <p class="gai-help" style="margin-top:0">Google Gemini reads the selected market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. It never changes Verity’s score, and nothing is bought from here.</p>
             <div class="gai-actions">
-              <button class="btn primary" id="gaiReview" data-needs-key disabled type="button">Review this market’s settlement rules</button>
+              <button class="btn primary" id="gaiReview" data-gai type="button">Review this market’s settlement rules</button>
             </div>
-            <label class="label" for="gaiQ" style="margin-top:14px;display:block">Or ask a question about this market</label>
-            <textarea id="gaiQ" class="gai-input gai-q" rows="3" placeholder="e.g. Which report version settles this, and what could change the payout?"></textarea>
-            <div class="gai-actions"><button class="btn" id="gaiAsk" data-needs-key disabled type="button">Ask Google Gemini</button><button class="btn sm ghost" id="gaiForget" type="button">Remove key</button></div>
-            <p class="gai-status" id="gaiStatus" role="status" aria-live="polite">Not connected.</p>
+            <label class="label" for="gaiQ" style="margin-top:16px;display:block">Or ask a question about this market</label>
+            <textarea id="gaiQ" class="gai-input gai-q" rows="3" maxlength="1500" placeholder="e.g. Which report version settles this, and what could change the payout?"></textarea>
+            <div class="gai-actions"><button class="btn" id="gaiAsk" data-gai type="button">Ask Google Gemini</button></div>
+            <p class="gai-status" id="gaiStatus" role="status" aria-live="polite">Ready · up to 6 requests per minute</p>
           </div>
           <div class="gai-right">
             <div class="copy-row"><span class="label">Model output</span><button class="btn sm" id="gaiCopy" type="button">Copy</button></div>
-            <div class="gai-out" id="gaiOut" aria-live="polite"><p class="muted">Connect a key, pick a market above, then run a review. The model scores ambiguity, source and correlation and compares them with verity-rules-v1. It never changes Verity’s score, and nothing is bought from here.</p></div>
+            <div class="gai-out" id="gaiOut" aria-live="polite"><p class="muted">Pick a market above, then run a review or ask a question.</p></div>
           </div>
         </div>
       </div>
@@ -665,7 +656,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
     <div class="sec-head"><span class="idx">05 / Architecture</span><h2 id="stackTitle">Four layers, each with one job</h2><p>The analysis only proposes. A separate payment service holds the signer and decides. That split is the whole safety argument.</p></div>
     <div class="matrix" role="table" aria-label="Four-layer architecture">
       <div class="row head" role="row"><div role="columnheader">Layer</div><div role="columnheader">Name</div><div role="columnheader">Responsibility</div><div role="columnheader">Technology</div></div>
-      <div class="row" role="row"><div role="cell" class="num muted">L1</div><div role="cell" class="layer">Brain</div><div role="cell">Reads the contract, scores resolution risk, finds gaps, proposes purchases</div><div role="cell" class="tech">Gemini Exchange public API · verity-rules-v1 (code rules, score of record) · optional Google Gemini second opinion (visitor’s key, advisory)</div></div>
+      <div class="row" role="row"><div role="cell" class="num muted">L1</div><div role="cell" class="layer">Brain</div><div role="cell">Reads the contract, scores resolution risk, finds gaps, proposes purchases</div><div role="cell" class="tech">Gemini Exchange public API · verity-rules-v1 (code rules, score of record) · optional Google Gemini second opinion (via Verity’s Cloudflare Worker, advisory)</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L2</div><div role="cell" class="layer">Wallet</div><div role="cell">Pays for exactly the requested resource, once</div><div role="cell" class="tech">x402 · EIP-3009 · USDC on Arc Testnet</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L3</div><div role="cell" class="layer">Safeguard</div><div role="cell">Enforces tiers, the 25 USDC budget and human approval</div><div role="cell" class="tech">Policy engine · ElevenLabs voice · wallet signature</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L4</div><div role="cell" class="layer">Auditor</div><div role="cell">Matches each payment to a verified delivery</div><div role="cell" class="tech">QuickNode Streams · reconciler</div></div>
@@ -1472,36 +1463,19 @@ function renderTabs(){const C=tabContent();$('#tabPanels').innerHTML=Object.entr
 (function tabs(){const tabs=$$('#tablist [role=tab]');const sel=t=>{tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$('#'+x.getAttribute('aria-controls')).hidden=!on;});};
   tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{let j=null;if(e.key==='ArrowRight')j=(i+1)%tabs.length;if(e.key==='ArrowLeft')j=(i-1+tabs.length)%tabs.length;if(e.key==='Home')j=0;if(e.key==='End')j=tabs.length-1;if(j!=null){e.preventDefault();tabs[j].focus();sel(tabs[j]);}});});})();
 /* ---------- Google Gemini (the AI model) — optional second opinion ----------
-   Not Gemini Exchange. The key is typed by the visitor, kept in memory (or in this
-   browser's localStorage only if they tick "Remember"), and sent only to
-   generativelanguage.googleapis.com. verity-rules-v1 remains the score of record. */
-const GAI={key:'',model:'',models:[],busy:false,last:null,
-  base:'https://generativelanguage.googleapis.com/v1beta',
-  async call(path,body){const r=await fetch(this.base+path,{method:body?'POST':'GET',headers:{'x-goog-api-key':this.key,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
-    const j=await r.json().catch(()=>({}));if(!r.ok){const m=j.error&&j.error.message||('HTTP '+r.status);const e=new Error(m);e.status=r.status;e.reason=j.error&&j.error.status;throw e;}return j;}};
-const STORE_K='verity.googleGeminiKey';
-function gaiErr(e){if(e.status===400&&/API key/i.test(e.message))return 'That API key was rejected by Google. Check it in Google AI Studio and paste it again.';
-  if(e.status===403)return 'Google refused this key ('+e.message+'). If the key has HTTP-referrer restrictions, add https://verityresearch.us/*.';
-  if(e.status===429)return 'Rate limit or quota reached for this key. Wait a minute and try again.';
-  if(e.status===404)return 'That model is not available to this key. Pick another model.';
-  return 'Google Gemini request failed: '+e.message;}
+   Not Gemini Exchange. Requests go to Verity's Cloudflare Worker, which holds the
+   Google API key as a Worker secret. No key is ever in this page, in the browser,
+   or in this repo. verity-rules-v1 remains the score of record. */
+const GAI={endpoint:'https://verity-gemini.safe-572.workers.dev/review',model:'gemini-2.5-flash',busy:false,last:null};
+try{localStorage.removeItem('verity.googleGeminiKey');}catch(e){} // clean up keys saved by the earlier bring-your-own-key version
+function gaiErr(status,msg){
+  if(status===429)return msg&&/quota/i.test(msg)?'Google Gemini’s quota is used up for now. Try again later.':'Too many reviews from this connection. Wait a minute and try again (limit: 6 per minute).';
+  if(status===503)return 'The review service is still being set up.';
+  if(status===403)return 'The review service only answers requests from verityresearch.us.';
+  if(status===413)return 'This market’s data is too large to send. Try another market.';
+  if(status===0)return 'Couldn’t reach the review service. Check your connection and try again.';
+  return msg||('The review service returned an error (HTTP '+status+').');}
 function gaiStatus(msg,cls){const s=$('#gaiStatus');s.className='gai-status '+(cls||'');s.textContent=msg;}
-async function gaiConnect(){const inp=$('#gaiKey');const k=inp.value.trim();if(!k){gaiStatus('Paste a Google Gemini API key first.','warn');inp.focus();return;}
-  GAI.key=k;const b=$('#gaiConnect');b.setAttribute('aria-busy','true');b.disabled=true;gaiStatus('Checking the key with Google…');
-  try{const j=await GAI.call('/models?pageSize=200');
-    GAI.models=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&/gemini/i.test(m.name)&&!/embedding|image|tts|audio|live/i.test(m.name));
-    if(!GAI.models.length)throw Object.assign(new Error('no text models available to this key'),{status:0});
-    const score=m=>(/flash/.test(m.name)?3:0)+(/pro/.test(m.name)?1:0)-(/lite/.test(m.name)?1:0)-(/preview|exp/.test(m.name)?2:0)+(parseFloat((m.name.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1])||0)/10;
-    GAI.models.sort((a,b)=>score(b)-score(a));
-    $('#gaiModel').innerHTML=GAI.models.map(m=>`<option value="${esc(m.name)}">${esc(m.displayName||m.name.replace('models/',''))}</option>`).join('');GAI.model=GAI.models[0].name;
-    try{if($('#gaiRemember').checked)localStorage.setItem(STORE_K,k);else localStorage.removeItem(STORE_K);}catch(e){}
-    inp.value='';inp.placeholder='Key connected (hidden) · paste a new one to replace it';
-    $('#gaiPanel').classList.add('connected');$$('#gaiPanel [data-needs-key]').forEach(x=>x.disabled=false);
-    gaiStatus('Connected · '+GAI.models.length+' models available · requests go straight from your browser to Google','ok');}
-  catch(e){GAI.key='';gaiStatus(gaiErr(e),'no');}
-  finally{b.removeAttribute('aria-busy');b.disabled=false;}}
-function gaiForget(){GAI.key='';GAI.models=[];try{localStorage.removeItem(STORE_K);}catch(e){}$('#gaiKey').value='';$('#gaiKey').placeholder='Paste your Google Gemini API key';
-  $('#gaiPanel').classList.remove('connected');$$('#gaiPanel [data-needs-key]').forEach(x=>x.disabled=true);$('#gaiModel').innerHTML='<option>Connect a key first</option>';gaiStatus('Key removed from this page and this browser.');}
 function marketContext(){const m=MARKETS[term.market];
   if(m.live){const r=m.r;return {source:'live Gemini Exchange market',event_ticker:m.e.ticker,title:m.e.title,category:m.e.category,outcome:m.c.label,
     best_bid:m.c.prices.bestBid??null,best_ask:m.c.prices.bestAsk??null,last_trade:m.c.prices.lastTradePrice??null,volume_usd:m.e.volume,volume_24h_usd:m.e.volume24h,expiry:m.c.expiryDate||m.e.expiryDate,
@@ -1510,48 +1484,36 @@ function marketContext(){const m=MARKETS[term.market];
   const J=m.key==='nyc'?NYC_JSON:OKC_JSON;return {source:'captured Nov 18, 2026 analysis',title:m.question,quote:J.quoted_price,
     rules_text:m.key==='nyc'?'Weather terms Rule 13.111(i)(2): "only the first published version that includes confirmation of the ___ will be used." Primary source is the NWS Climatological Report (Daily) for Central Park, then Weather Underground or weather.com, then the Iowa Environmental Mesonet.':'NBA moneyline. Source agencies in order: the league governing body (NBA), ESPN, Fox Sports, and the broadcast partner.',
     verity_rules_v1:{scores:Object.fromEntries(Object.entries(m.scores).map(([k,v])=>[k,{score:v[0],rationale:v[1]}])),total:m.total,rating:m.rating}};}
-const GAI_SYS=`You review prediction-market contracts for resolution risk: how the contract settles, NOT whether the event will happen. Never give trading or betting advice and never predict the outcome. Base every statement on the market data and rules text provided; if something is not in the input, say it is unknown. Risk scale per category: 1 low, 2 medium, 3 high; totals 4-6 Low, 7-8 Medium, 9-12 High. Be concise and concrete.`;
-const GAI_SCHEMA={type:'OBJECT',properties:{
-  summary:{type:'STRING',description:'Two sentences: what settles this contract and the main settlement risk.'},
-  settlement_source:{type:'STRING'},
-  ambiguities:{type:'ARRAY',items:{type:'OBJECT',properties:{issue:{type:'STRING'},quote:{type:'STRING',description:'Exact words from the rules text, or empty if none'},why_it_matters:{type:'STRING'}},required:['issue','why_it_matters']}},
-  scores:{type:'OBJECT',properties:{ambiguity:{type:'INTEGER'},source:{type:'INTEGER'},correlation:{type:'INTEGER'}},required:['ambiguity','source','correlation']},
-  agrees_with_rules_analyst:{type:'BOOLEAN'},disagreement:{type:'STRING',description:'Where and why you differ from verity_rules_v1, or empty'},
-  research_to_close_gaps:{type:'ARRAY',items:{type:'STRING'}},
-  confidence:{type:'STRING',enum:['low','medium','high']}},
-  required:['summary','settlement_source','ambiguities','scores','agrees_with_rules_analyst','research_to_close_gaps','confidence']};
-async function gaiRun(mode){if(!GAI.key||GAI.busy)return;GAI.model=$('#gaiModel').value||GAI.model;const ctx=marketContext();
-  const q=$('#gaiQ').value.trim();if(mode==='ask'&&!q){gaiStatus('Type a question first.','warn');$('#gaiQ').focus();return;}
-  GAI.busy=true;const btn=mode==='ask'?$('#gaiAsk'):$('#gaiReview');btn.setAttribute('aria-busy','true');$$('#gaiPanel [data-needs-key]').forEach(x=>x.disabled=true);
-  const out=$('#gaiOut');out.innerHTML='<p class="muted">Asking '+esc(GAI.model.replace('models/',''))+'…</p>';
-  const body={systemInstruction:{parts:[{text:GAI_SYS}]},contents:[{role:'user',parts:[{text:(mode==='ask'?'Question: '+q+'\n\nAnswer from this market data only:\n':'Review this contract for resolution risk and compare with verity_rules_v1.\n')+JSON.stringify(ctx,null,1)}]}],
-    generationConfig:mode==='ask'?{temperature:.3,maxOutputTokens:1024}:{temperature:.2,maxOutputTokens:2048,responseMimeType:'application/json',responseSchema:GAI_SCHEMA}};
-  const t0=performance.now();
-  try{const j=await GAI.call('/'+GAI.model+':generateContent',body);const cand=j.candidates&&j.candidates[0];
-    const text=cand&&cand.content&&cand.content.parts?cand.content.parts.map(p=>p.text||'').join(''):'';
-    if(!text)throw Object.assign(new Error(cand&&cand.finishReason?'no text returned (finish reason '+cand.finishReason+')':(j.promptFeedback&&j.promptFeedback.blockReason?'blocked: '+j.promptFeedback.blockReason:'empty response')),{status:0});
-    const meta=`${esc(GAI.model.replace('models/',''))} · ${Math.round(performance.now()-t0)} ms${j.usageMetadata?' · '+(j.usageMetadata.totalTokenCount||'?')+' tokens':''} · ${new Date().toLocaleTimeString()}`;
-    if(mode==='ask'){GAI.last={mode,ctx,q,text};out.innerHTML=`<div class="gai-meta"><span class="tag info">Google Gemini · advisory</span><span class="label">${meta}</span></div><div class="gai-text">${mdLite(text)}</div>`;}
-    else{let r;try{r=JSON.parse(text);}catch(e){throw Object.assign(new Error('the model did not return valid JSON'),{status:0});}GAI.last={mode,ctx,result:r};out.innerHTML=reviewHTML(r,ctx,meta);}
+function fitContext(ctx){let s=JSON.stringify(ctx);while(s.length>20000&&ctx.rules_text&&ctx.rules_text.length>500){ctx.rules_text=ctx.rules_text.slice(0,Math.floor(ctx.rules_text.length*.7))+'…';s=JSON.stringify(ctx);}return ctx;} // Worker limit is 24 KB
+async function gaiRun(mode){if(GAI.busy)return;const q=$('#gaiQ').value.trim();
+  if(mode==='ask'&&!q){gaiStatus('Type a question first.','warn');$('#gaiQ').focus();return;}
+  if(q.length>1500&&mode==='ask'){gaiStatus('Questions can be up to 1,500 characters.','warn');return;}
+  const ctx=fitContext(marketContext());GAI.busy=true;const btn=mode==='ask'?$('#gaiAsk'):$('#gaiReview');btn.setAttribute('aria-busy','true');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=true);
+  const out=$('#gaiOut');out.innerHTML='<p class="muted">Asking Google Gemini about '+esc(ctx.title||'this market')+'…</p>';gaiStatus('Waiting for Google Gemini…');
+  const t0=performance.now();let status=0;
+  try{const r=await fetch(GAI.endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(mode==='ask'?{mode,question:q,market:ctx}:{mode,market:ctx})});
+    status=r.status;const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||''),{status});
+    const cand=j.candidates&&j.candidates[0];const text=cand&&cand.content&&cand.content.parts?cand.content.parts.map(p=>p.text||'').join(''):'';
+    if(!text)throw Object.assign(new Error(j.promptFeedback&&j.promptFeedback.blockReason?'Google Gemini declined to answer ('+j.promptFeedback.blockReason+').':'Google Gemini returned an empty answer'+(cand&&cand.finishReason?' ('+cand.finishReason+')':'')+'.'),{status:-1});
+    const meta=`${esc(j.modelVersion||GAI.model)} · ${(Math.round(performance.now()-t0)/1000).toFixed(1)} s${j.usageMetadata&&j.usageMetadata.totalTokenCount?' · '+j.usageMetadata.totalTokenCount+' tokens':''} · ${new Date().toLocaleTimeString()}`;
+    if(mode==='ask'){GAI.last={mode,text};out.innerHTML=`<div class="gai-meta"><span class="tag info">Google Gemini · advisory</span><span class="label">${meta}</span></div><div class="gai-text">${mdLite(text)}</div>`;}
+    else{let res;try{res=JSON.parse(text);}catch(e){throw Object.assign(new Error('Google Gemini’s answer wasn’t valid JSON. Try again.'),{status:-1});}GAI.last={mode,result:res};out.innerHTML=reviewHTML(res,ctx,meta);}
     gaiStatus('Done. This is a model opinion; verity-rules-v1 is still the score Verity uses.','ok');}
-  catch(e){out.innerHTML=`<div class="box no"><span class="tag no">✕ Error</span><p style="font-size:.86rem;margin-top:8px">${esc(gaiErr(e))}</p></div>`;gaiStatus(gaiErr(e),'no');}
-  finally{GAI.busy=false;btn.removeAttribute('aria-busy');$$('#gaiPanel [data-needs-key]').forEach(x=>x.disabled=!GAI.key);}}
+  catch(e){const msg=e.status===-1?e.message:gaiErr(e.status??status,e.message);out.innerHTML=`<div class="box no"><span class="tag no">✕ Not available</span><p style="font-size:.86rem;margin-top:8px">${esc(msg)}</p></div>`;gaiStatus(msg,'no');}
+  finally{GAI.busy=false;btn.removeAttribute('aria-busy');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=false);}}
 function mdLite(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^\s*[-*] (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,s=>'<ul>'+s.replace(/\n/g,'')+'</ul>').replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>')+'</p>';}
 function reviewHTML(r,ctx,meta){const ru=ctx.verity_rules_v1||{};const rs=k=>{const v=ru[k]||(ru.scores&&ru.scores[k]);return v?(Array.isArray(v)?v[0]:v.score):null;};
   const s=r.scores||{};const row=(k,l)=>`<tr><td>${l}</td><td class="num">${rs(k)??'—'}</td><td class="num">${s[k]??'—'}</td><td>${rs(k)!=null&&s[k]!=null&&rs(k)!==s[k]?'<span class="tag warn">! differs</span>':'<span class="tag neutral">– same</span>'}</td></tr>`;
   return `<div class="gai-meta"><span class="tag info">Google Gemini · advisory, not the score of record</span><span class="label">${meta}</span></div>
    <p class="gai-sum">${esc(r.summary||'')}</p>
    <dl class="kv"><dt>Settlement source</dt><dd>${esc(r.settlement_source||'unknown')}</dd><dt>Model confidence</dt><dd>${esc(r.confidence||'—')}</dd><dt>Agrees with rules</dt><dd>${r.agrees_with_rules_analyst?'<span class="tag ok">✓ yes</span>':'<span class="tag warn">! no</span>'} ${esc(r.disagreement||'')}</dd></dl>
-   <table class="gai-cmp"><thead><tr><th>Category</th><th class="num">verity-rules-v1</th><th class="num">Gemini</th><th></th></tr></thead><tbody>${row('ambiguity','Ambiguity')}${row('source','Source')}${row('correlation','Correlation')}</tbody></table>
+   <table class="gai-cmp"><thead><tr><th>Category</th><th class="num">verity-rules-v1</th><th class="num">Google Gemini</th><th></th></tr></thead><tbody>${row('ambiguity','Ambiguity')}${row('source','Source')}${row('correlation','Correlation')}</tbody></table>
    ${(r.ambiguities||[]).length?`<h4 class="label" style="margin:14px 0 6px">Ambiguities it found</h4><ul class="gai-list">${r.ambiguities.map(a=>`<li><b>${esc(a.issue)}</b>${a.quote?`<div class="excerpt">${esc(a.quote)}</div>`:''}<span class="muted">${esc(a.why_it_matters||'')}</span></li>`).join('')}</ul>`:''}
    ${(r.research_to_close_gaps||[]).length?`<h4 class="label" style="margin:14px 0 6px">Research it suggests</h4><ul class="gai-list">${r.research_to_close_gaps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="label">Suggestions only. Verity buys nothing from this panel.</p>`:''}`;}
 (function gaiInit(){
-  $('#gaiConnect').addEventListener('click',gaiConnect);$('#gaiKey').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();gaiConnect();}});
-  $('#gaiForget').addEventListener('click',gaiForget);$('#gaiReview').addEventListener('click',()=>gaiRun('review'));$('#gaiAsk').addEventListener('click',()=>gaiRun('ask'));
+  $('#gaiReview').addEventListener('click',()=>gaiRun('review'));$('#gaiAsk').addEventListener('click',()=>gaiRun('ask'));
   $('#gaiQ').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();gaiRun('ask');}});
-  $('#gaiShow').addEventListener('click',e=>{const k=$('#gaiKey');const show=k.type==='password';k.type=show?'text':'password';e.currentTarget.setAttribute('aria-pressed',show);e.currentTarget.textContent=show?'Hide':'Show';});
-  $('#gaiCopy').addEventListener('click',()=>{if(!GAI.last){toast('Run a review first.');return;}copy(GAI.last.mode==='ask'?GAI.last.text:JSON.stringify(GAI.last.result,null,2),'Gemini answer copied');});
-  try{const k=localStorage.getItem(STORE_K);if(k){$('#gaiKey').value=k;$('#gaiRemember').checked=true;gaiConnect();}}catch(e){}
+  $('#gaiCopy').addEventListener('click',()=>{if(!GAI.last){toast('Run a review first.');return;}copy(GAI.last.mode==='ask'?GAI.last.text:JSON.stringify(GAI.last.result,null,2),'Google Gemini answer copied');});
 })();
 /* ---------- Reconciler ledger (demo fixtures) ---------- */
 const STATUS={ok:['ok','✓ Matched & verified'],pnd:['no','✕ Paid, not delivered'],dnp:['warn','! Delivered, not paid'],dup:['info','≡ Duplicate, deduplicated'],nonce:['info','≡ Replay blocked, nonce used'],mis:['no','✕ Mismatched request']};
