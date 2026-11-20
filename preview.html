@@ -997,7 +997,7 @@ window.__lpField=(function(){
         out.push({p:Math.max(0,Math.min(1,m)),h:ms,v:+e.volume||0,t:e.title+(c.label&&c.label!==e.title?': '+c.label:''),key:e.ticker+'|'+c.id,
           d:{ticker:e.ticker,contractId:c.id,title:e.title,outcome:c.label&&c.label!==e.title?c.label:'Yes',category:e.category||'',price:m,bid:pr.bestBid!=null?+pr.bestBid:null,ask:pr.bestAsk!=null?+pr.bestAsk:null,volume:+e.volume||0,volume24h:e.volume24h!=null?+e.volume24h:null,expiry:e.expiryDate||'',siblings:Math.max(0,cs.length-1)}});});});
     var vmax=Math.max.apply(null,out.map(function(o){return o.v;}).concat([1]));out.forEach(function(o){o.r=Math.sqrt(1+8*(o.v/vmax));}); // 2 to 6 px across, area grows with volume
-    mk=out;relayout();}
+    mk=out;if(!W)size();else{measure();relayout();}}
   function redraw(){if(queued)return;queued=requestAnimationFrame(function(){queued=0;draw();});}
   function draw(){ctx.clearRect(0,0,W,H);if(!W)return;
     ctx.fillStyle='rgba(139,155,180,.22)';cells.forEach(function(c){if(!c.used)ctx.fillRect(c.x-.5,c.y-.5,1,1);}); // empty lattice keeps the V's outline
@@ -1020,7 +1020,7 @@ window.__lpField=(function(){
     .catch(function(){cv.parentNode.style.cursor='';sel=-1;redraw();tip.textContent='Could not load the market details. Try again.';tip.classList.add('on');});}
   function fetchAll(){Promise.all([0,100,200].map(function(o){return fetch('https://api.gemini.com/v1/prediction-markets/events?status=active&limit=100&offset='+o,{cache:'no-store'}).then(function(r){return r.ok?r.json():{data:[]};}).catch(function(){return {data:[]};});}))
     .then(function(js){var seen={},ev=[];js.forEach(function(j){(j.data||[]).forEach(function(e){if(!seen[e.ticker]){seen[e.ticker]=1;ev.push(e);}});});build(ev);});}
-  return {start:function(){size();addEventListener('resize',size);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){measure();relayout();});
+  return {start:function(){size();addEventListener('resize',size);if(window.ResizeObserver){var lastW=0,lastH=0;new ResizeObserver(function(){var r=cv.getBoundingClientRect();if(Math.abs(r.width-lastW)>1||Math.abs(r.height-lastH)>1){lastW=r.width;lastH=r.height;size();}}).observe(cv);var c2=document.querySelector('.lp-contract');if(c2)new ResizeObserver(function(){measure();relayout();}).observe(c2);}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){measure();relayout();});
     var art=cv.parentNode;art.addEventListener('pointermove',onMove);art.addEventListener('pointerleave',function(){if(hover>=0){hover=-1;redraw();}tip.classList.remove('on');});
     art.addEventListener('click',function(e){if(hover<0||e.target.closest('a,button,figure,.lp-hero-copy'))return;openDot(hover);});
     fetchAll();setInterval(function(){if(document.documentElement.classList.contains('landing'))fetchAll();},60000);}};
