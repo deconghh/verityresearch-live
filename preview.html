@@ -1233,7 +1233,7 @@ function renderStats(){
   else if(LIVE.lastOk){s.className='tick-status stale';s.textContent='Connection lost · showing data from '+new Date(LIVE.lastOk).toLocaleTimeString()+' · retrying';}
   else if(LIVE.err){s.className='tick-status stale';s.textContent='Gemini Exchange is unreachable right now ('+LIVE.err+'). Retrying every 15 s.';}
 }
-const ANCHOR={user:false};['wheel','touchstart','keydown','mousedown'].forEach(ev=>addEventListener(ev,()=>{ANCHOR.user=true;},{passive:true,once:true}));
+const ANCHOR={user:false};['wheel','touchmove','keydown'].forEach(ev=>addEventListener(ev,e=>{if(ev==='keydown'&&!/^(Arrow|Page|Home|End| )/.test(e.key))return;ANCHOR.user=true;anchorTarget=null;},{passive:true}));
 let anchorTarget=null;$$('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{anchorTarget=a.getAttribute('href');ANCHOR.user=false;setTimeout(()=>{anchorTarget=null;},4000);}));
 function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(!el)return;requestAnimationFrame(()=>{const y=el.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);if(Math.abs(scrollY-y)>8)scrollTo({top:y,behavior:'instant'});});}
 [300,1200,2500,5000].forEach(t=>setTimeout(keepAnchor,t));if(document.fonts)document.fonts.ready.then(keepAnchor);
