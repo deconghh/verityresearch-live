@@ -396,6 +396,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 .tick-status .dot{width:6px;height:6px;border-radius:50%;background:var(--signal-yes);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
 @media (max-width:640px){.tick-status .num{display:none}}
+@media (max-width:640px){.tick-status .src{display:none}}
 </style>
 </head>
 <body>
@@ -975,7 +976,7 @@ if('ResizeObserver'in window)new ResizeObserver(()=>drawCandles()).observe($('#c
         $('[data-sp]',el).innerHTML=spark(r.c.id);});}
   }
   function setLabel(){const age=Date.now()-lastOk;
-    if(mode==='live'&&age<STALE){lab.className='tick-status live';lab.innerHTML=`<span class="dot" aria-hidden="true"></span>Live · Gemini Exchange<span class="num"> · ${new Date(lastOk).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;}
+    if(mode==='live'&&age<STALE){lab.className='tick-status live';lab.innerHTML=`<span class="dot" aria-hidden="true"></span>Live<span class="src"> · Gemini Exchange</span><span class="num"> · ${new Date(lastOk).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;}
     else if(mode==='live'){lab.className='tick-status stale';lab.textContent='Stale · retrying Gemini Exchange';}
     else if(mode==='fallback'){lab.className='tick-status stale';lab.textContent='Live feed unavailable · Nov 18 snapshot';}
     else{lab.className='tick-status';lab.textContent='Connecting to Gemini Exchange…';}}
