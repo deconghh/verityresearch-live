@@ -556,6 +556,34 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 @media (max-width:520px){.side-top{grid-template-columns:120px 1fr}.hero-side .coin-stage{width:120px;max-width:120px}}
 .panel-head>*{min-width:0}
 .panel-head .real,.panel-head .demo,.panel-head .tag{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+/* news pictures */
+.news-pic{display:block;overflow:hidden;border-radius:var(--radius-inner);background:var(--bg-elevated);border:1px solid var(--border-hairline)}
+.news-pic img{display:block;width:100%;height:100%;object-fit:cover;border:0}
+.news-pic.logo{display:flex;align-items:center;justify-content:center;background:#e9eef7}
+.news-pic.logo img{width:46%;height:auto;object-fit:contain}
+.news-pic.broken{background:var(--bg-elevated)}
+.lead-pic{width:100%;aspect-ratio:16/9}
+.lead-pic.logo img{width:22%}
+.item-pic{width:56px;height:40px}
+.lead-link>img,.news-item>img{display:none}
+/* movable AI window */
+.ai-head-btns{display:flex;gap:6px;flex:none}
+.ai-dock-head{cursor:grab;touch-action:none;user-select:none}
+.ai-dock.resizing .ai-dock-head{cursor:grabbing}
+.ai-move{cursor:grab}
+.ai-grip{display:none;position:absolute;z-index:3;touch-action:none}
+.ai-dock.floating{top:var(--ai-y);left:var(--ai-x);right:auto;bottom:auto;width:var(--ai-w);height:var(--ai-h);padding:0;transform:none;transition:none}
+.ai-dock.floating>.panel{box-shadow:0 0 0 1px var(--border-strong)}
+.ai-dock.floating .ai-grip{display:block}
+.ai-grip[data-k=e]{right:-5px;top:12px;bottom:12px;width:10px;cursor:ew-resize}
+.ai-grip[data-k=s]{bottom:-5px;left:12px;right:12px;height:10px;cursor:ns-resize}
+.ai-grip[data-k=n]{top:-5px;left:12px;right:12px;height:10px;cursor:ns-resize}
+.ai-grip[data-k=se]{right:-6px;bottom:-6px;width:16px;height:16px;cursor:nwse-resize}
+.ai-grip[data-k=sw]{left:-6px;bottom:-6px;width:16px;height:16px;cursor:nesw-resize}
+.ai-grip[data-k=ne]{right:-6px;top:-6px;width:16px;height:16px;cursor:nesw-resize}
+.ai-grip[data-k=se]::after{content:"";position:absolute;right:6px;bottom:6px;width:8px;height:8px;border-right:2px solid var(--text-muted);border-bottom:2px solid var(--text-muted)}
+.ai-float.ai-open .ai-tab{right:0}
+@media (max-width:760px){.ai-move{display:none}.ai-dock-head{cursor:default}}
 </style>
 </head>
 <body>
@@ -813,11 +841,11 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 <!-- AI second opinion: side dock that follows the page -->
 <button class="ai-tab" id="aiTab" type="button" aria-expanded="false" aria-controls="aiDock"><span class="ai-tab-dot" aria-hidden="true"></span><span class="ai-tab-label">AI second opinion</span></button>
 <aside class="ai-dock" id="aiDock" aria-label="AI second opinion" aria-hidden="true">
-  <div class="ai-resize" id="aiResize" role="separator" aria-orientation="vertical" aria-label="Resize AI panel. Drag, or use the left and right arrow keys." aria-valuemin="320" aria-valuemax="900" aria-valuenow="440" tabindex="0" title="Drag to resize · double-click to reset"></div>
+  <div class="ai-resize" id="aiResize" role="separator" aria-orientation="vertical" aria-label="Resize AI panel. Drag, or use the arrow keys: left and right for width, up and down for height when floating." aria-valuemin="320" aria-valuemax="900" aria-valuenow="440" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <div class="panel" id="gaiPanel">
     <div class="ai-dock-head">
       <div><h2 class="ai-dock-title">AI second opinion</h2><p class="label" style="margin-top:2px">Google Gemini · Workers AI backup · advisory only</p></div>
-      <button class="btn sm" id="aiClose" type="button" aria-label="Close AI panel">Close</button>
+      <div class="ai-head-btns"><button class="btn sm ghost ai-move" id="aiMove" type="button" title="Drag the header to move. Arrow keys move it when this button is focused." aria-label="Move AI panel (drag the header, or use the arrow keys here)">Move</button><button class="btn sm" id="aiDockBtn" type="button" hidden>Dock</button><button class="btn sm" id="aiClose" type="button" aria-label="Close AI panel">Close</button></div>
     </div>
     <div class="ai-dock-body">
       <div class="ai-market"><span class="label">Market</span><p id="gaiMarket">—</p><a href="#terminal" class="ai-change" data-ai-change>Change market in the terminal</a></div>
@@ -831,6 +859,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
       <div class="gai-out" id="gaiOut" aria-live="polite"><p class="muted">Run a review or ask a question to see the model’s answer here.</p></div>
     </div>
   </div>
+  <span class="ai-grip" data-k="e" aria-hidden="true"></span><span class="ai-grip" data-k="s" aria-hidden="true"></span><span class="ai-grip" data-k="n" aria-hidden="true"></span><span class="ai-grip" data-k="se" aria-hidden="true"></span><span class="ai-grip" data-k="sw" aria-hidden="true"></span><span class="ai-grip" data-k="ne" aria-hidden="true"></span>
 </aside>
 
 <div class="drawer-backdrop" id="drawerBg"></div>
@@ -1721,20 +1750,43 @@ async function runForecast(){if(FC.busy)return;const m=MARKETS[term.market];cons
   finally{FC.busy=false;btn.removeAttribute('aria-busy');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=false);}}
 $('#fcRun').addEventListener('click',runForecast);
 
-/* ---------- Resizable dock ---------- */
-(function dockResize(){const d=$('#aiDock'),h=$('#aiResize');const KEY='verity.aiDockWidth';
-  const clamp=w=>Math.max(320,Math.min(w,Math.min(900,innerWidth-80)));
-  const set=w=>{w=clamp(w);document.documentElement.style.setProperty('--ai-w',w+'px');h.setAttribute('aria-valuenow',Math.round(w));return w;};
-  let w=440;try{const s=+localStorage.getItem(KEY);if(s)w=s;}catch(e){}set(w);
-  const save=()=>{try{localStorage.setItem(KEY,Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))));}catch(e){}};
-  h.addEventListener('pointerdown',e=>{if(matchMedia('(max-width:760px)').matches)return;e.preventDefault();h.setPointerCapture(e.pointerId);d.classList.add('resizing');
-    const move=ev=>set(innerWidth-ev.clientX-12);const up=()=>{h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up);d.classList.remove('resizing');save();};
-    h.addEventListener('pointermove',move);h.addEventListener('pointerup',up);});
-  h.addEventListener('keydown',e=>{const cur=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))||440;
-    if(e.key==='ArrowLeft'){e.preventDefault();set(cur+32);save();}if(e.key==='ArrowRight'){e.preventDefault();set(cur-32);save();}
-    if(e.key==='Home'){e.preventDefault();set(320);save();}if(e.key==='End'){e.preventDefault();set(900);save();}});
-  h.addEventListener('dblclick',()=>{set(440);save();});
-  addEventListener('resize',()=>set(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))||440));})();
+/* ---------- Movable, resizable AI window ---------- */
+(function aiWindow(){const d=$('#aiDock'),root=document.documentElement,KEY='verity.aiWindow.v2';
+  const small=()=>matchMedia('(max-width:760px)').matches;
+  const S={mode:'docked',x:0,y:0,w:440,h:0};
+  try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){}
+  const navH=()=>($('#nav')?$('#nav').getBoundingClientRect().bottom:64);
+  function clamp(){const vw=innerWidth,vh=innerHeight;S.w=Math.max(320,Math.min(S.w||440,vw-24));
+    if(S.mode==='floating'){S.h=Math.max(280,Math.min(S.h||vh-160,vh-24));S.x=Math.max(8,Math.min(S.x,vw-S.w-8));S.y=Math.max(8,Math.min(S.y,vh-S.h-8));}}
+  function apply(save){clamp();const fl=S.mode==='floating'&&!small();d.classList.toggle('floating',fl);document.body.classList.toggle('ai-float',fl);
+    root.style.setProperty('--ai-w',S.w+'px');root.style.setProperty('--ai-h',(S.h||400)+'px');root.style.setProperty('--ai-x',S.x+'px');root.style.setProperty('--ai-y',S.y+'px');
+    $('#aiDockBtn').hidden=!fl;$('#aiResize').setAttribute('aria-valuenow',Math.round(S.w));if(save)try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+  function toFloating(){if(S.mode==='floating')return;const r=d.getBoundingClientRect();S.mode='floating';S.x=r.left;S.y=r.top;S.w=r.width;S.h=r.height;}
+  function drag(e,kind){if(small()||e.button>0)return;if(kind==='move'&&e.target.closest('button,a,input,textarea,select'))return;e.preventDefault();
+    const el=e.currentTarget;el.setPointerCapture(e.pointerId);if(kind!=='w'||S.mode==='floating')toFloating();
+    const s={...S,px:e.clientX,py:e.clientY};d.classList.add('resizing');
+    const move=ev=>{const dx=ev.clientX-s.px,dy=ev.clientY-s.py;
+      if(kind==='move'){S.x=s.x+dx;S.y=s.y+dy;}
+      if(kind==='w'){if(S.mode==='floating'){S.w=s.w-dx;S.x=s.x+dx;if(S.w<320){S.x-=320-S.w;}}else S.w=innerWidth-ev.clientX-12;}
+      if(kind==='e'||kind==='se'||kind==='ne')S.w=s.w+dx;
+      if(kind==='sw'){S.w=s.w-dx;S.x=s.x+dx;}
+      if(kind==='s'||kind==='se'||kind==='sw')S.h=s.h+dy;
+      if(kind==='n'||kind==='ne'){S.h=s.h-dy;S.y=s.y+dy;}
+      apply(false);};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);d.classList.remove('resizing');apply(true);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);}
+  $('.ai-dock-head').addEventListener('pointerdown',e=>drag(e,'move'));
+  $('#aiResize').addEventListener('pointerdown',e=>drag(e,'w'));
+  $$('.ai-grip').forEach(g=>g.addEventListener('pointerdown',e=>drag(e,g.dataset.k)));
+  // keyboard: move with the Move button + arrows, resize with the left edge + arrows
+  $('#aiMove').addEventListener('keydown',e=>{const st=e.shiftKey?64:16;const k={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];if(!k||small())return;e.preventDefault();toFloating();S.x+=k[0];S.y+=k[1];apply(true);});
+  $('#aiMove').addEventListener('click',()=>{if(small())return;toFloating();apply(true);$('#aiMove').focus();});
+  $('#aiResize').addEventListener('keydown',e=>{const st=e.shiftKey?96:32;let f=null;if(e.key==='ArrowLeft')f=st;if(e.key==='ArrowRight')f=-st;if(e.key==='ArrowUp'&&S.mode==='floating'){e.preventDefault();S.h-=st;apply(true);return;}if(e.key==='ArrowDown'&&S.mode==='floating'){e.preventDefault();S.h+=st;apply(true);return;}
+    if(f!=null){e.preventDefault();if(S.mode==='floating'){S.w+=f;S.x-=f;}else S.w+=f;apply(true);}});
+  $('#aiResize').addEventListener('dblclick',()=>{S.w=440;if(S.mode==='floating')S.h=Math.min(640,innerHeight-120);apply(true);});
+  $('#aiDockBtn').addEventListener('click',()=>{S.mode='docked';S.h=0;apply(true);$('#aiMove').focus();});
+  addEventListener('resize',()=>apply(false));
+  apply(false);})();
 /* ---------- Crypto news (publisher RSS via Verity's Worker; Hacker News fallback) ---------- */
 const NEWS={items:[],src:'',filter:'all',fetched:0,timer:0};
 const NEWS_TOPICS=[['all','All',null],['btc','Bitcoin',/bitcoin|\bbtc\b|satoshi|miner/i],['eth','Ethereum',/ether|\beth\b|vitalik|layer[- ]?2|rollup/i],['reg','Regulation',/sec\b|regulat|cftc|law|bill|congress|court|lawsuit|ban|tax|policy|senat/i],['mkt','Markets',/etf|price|rally|drop|fall|surge|market|trader|inflow|outflow|liquidat|stock|fed\b|rate/i],['pm','Prediction markets',/prediction market|polymarket|kalshi|gemini|bet|odds|forecast/i]];
@@ -1748,14 +1800,16 @@ async function newsFromHN(){const qs=['bitcoin','ethereum','cryptocurrency','sta
     .map(h=>{let host='';try{host=new URL(h.url).hostname.replace(/^www\./,'');}catch(e){}return {title:h.title,link:h.url,source:host||'Hacker News',published:h.created_at,summary:`${h.points} points · ${h.num_comments||0} comments on Hacker News`,image:null};})
     .sort((a,b)=>Date.parse(b.published)-Date.parse(a.published)).slice(0,40);
   if(!items.length)throw new Error('no items');return {items,src:'Hacker News crypto stories (publisher feeds unavailable)'};}
+function logoFor(i){let host='';try{host=new URL(i.link).hostname;}catch(e){}return host?`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`:null;}
+function pic(i,cls){const src=i.image?safeHref(i.image):logoFor(i);if(!src)return `<span class="news-noimg ${cls}" aria-hidden="true"></span>`;return `<span class="news-pic ${cls}${i.image?'':' logo'}"><img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('broken');this.remove()"></span>`;}
 function safeHref(u){try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:'#';}catch(e){return '#';}}
 function renderNews(){const list=$('#newsList'),lead=$('#leadStory');const re=(NEWS_TOPICS.find(t=>t[0]===NEWS.filter)||[])[2];
   const items=re?NEWS.items.filter(i=>re.test(i.title+' '+(i.summary||''))):NEWS.items;
   $$('#newsFilters button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===NEWS.filter));
   if(!NEWS.items.length){list.innerHTML='<li class="empty">Loading headlines…</li>';return;}
   const top=items[0];
-  lead.innerHTML=top?`<a class="lead-link" href="${esc(safeHref(top.link))}" target="_blank" rel="noopener noreferrer">${top.image?`<img src="${esc(safeHref(top.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<span class="label">${esc(top.source)} · ${agoStr(top.published)}</span><span class="lead-title">${esc(top.title)}</span>${top.summary?`<span class="lead-sum">${esc(top.summary)}</span>`:''}</a>`:'<p class="muted">No headlines in this topic right now.</p>';
-  list.innerHTML=items.slice(1,9).map(i=>`<li><a class="news-item" href="${esc(safeHref(i.link))}" target="_blank" rel="noopener noreferrer">${i.image?`<img src="${esc(safeHref(i.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span class="news-noimg" aria-hidden="true"></span>'}<span class="news-text"><span class="news-title">${esc(i.title)}</span><span class="label">${esc(i.source)} · ${agoStr(i.published)}</span></span></a></li>`).join('')||(top?'':'<li class="empty">No headlines in this topic right now.</li>');
+  lead.innerHTML=top?`<a class="lead-link" href="${esc(safeHref(top.link))}" target="_blank" rel="noopener noreferrer">${pic(top,'lead-pic')}<span class="label">${esc(top.source)} · ${agoStr(top.published)}</span><span class="lead-title">${esc(top.title)}</span>${top.summary?`<span class="lead-sum">${esc(top.summary)}</span>`:''}</a>`:'<p class="muted">No headlines in this topic right now.</p>';
+  list.innerHTML=items.slice(1,9).map(i=>`<li><a class="news-item" href="${esc(safeHref(i.link))}" target="_blank" rel="noopener noreferrer">${pic(i,'item-pic')}<span class="news-text"><span class="news-title">${esc(i.title)}</span><span class="label">${esc(i.source)} · ${agoStr(i.published)}</span></span></a></li>`).join('')||(top?'':'<li class="empty">No headlines in this topic right now.</li>');
   const s=$('#newsStatus');s.className='tick-status live';s.innerHTML=`<span class="dot" aria-hidden="true"></span>Live · ${esc(NEWS.src)}`;}
 async function loadNews(){if(document.hidden)return;
   try{let r;try{r=await newsFromWorker();}catch(e){r=await newsFromHN();}NEWS.items=r.items;NEWS.src=r.src;NEWS.fetched=Date.now();renderNews();}
