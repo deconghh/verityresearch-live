@@ -468,6 +468,33 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 .gai-text p+p{margin-top:8px}.gai-text ul{margin:6px 0;padding-left:18px}
 #gaiPanel.connected #gaiTag{color:var(--signal-yes)}
 .gai-note{font-size:.82rem;color:var(--signal-warn);margin:-2px 0 10px}
+/* AI side dock */
+.ai-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:70;writing-mode:vertical-rl;display:flex;align-items:center;gap:8px;padding:16px 9px;background:var(--accent-blue);color:#fff;border:0;border-radius:var(--radius-element) 0 0 var(--radius-element);font-weight:600;font-size:.84rem;letter-spacing:.02em;cursor:pointer;transition:background-color 150ms,right var(--duration-medium) var(--ease-standard)}
+.ai-tab:hover{background:#4770ff}
+.ai-tab-label{transform:rotate(180deg)}
+.ai-tab-dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.ai-dock{position:fixed;top:100px;right:0;bottom:12px;width:min(440px,calc(100vw - 24px));z-index:72;transform:translateX(calc(100% + 16px));transition:transform var(--duration-medium) var(--ease-standard);padding-right:12px;visibility:hidden}
+.ai-dock.open{transform:none;visibility:visible}
+.ai-open .ai-tab{right:min(452px,calc(100vw - 12px))}
+.ai-dock>.panel{height:100%;display:flex;flex-direction:column;border-color:var(--border-strong);background:var(--bg-surface)}
+.ai-dock-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-hairline)}
+.ai-dock-title{font-size:1.05rem;letter-spacing:-.01em}
+.ai-dock-body{padding:14px 16px;overflow-y:auto;flex:1;min-height:0}
+.ai-market{border:1px solid var(--border-hairline);border-radius:var(--radius-element);padding:10px 12px;background:var(--bg-void);margin-bottom:12px}
+.ai-market p{font-size:.88rem;margin-top:2px}
+.ai-change{font-size:.78rem}
+.ai-full{width:100%;margin-top:6px}
+.ai-dock .gai-out{padding:12px 0 0;max-height:none;border-top:1px solid var(--border-hairline);margin-top:12px}
+.ai-dock .gai-cmp td,.ai-dock .gai-cmp th{padding:6px 8px}
+@media (max-width:760px){
+  .ai-tab{top:auto;bottom:16px;right:16px;transform:none;writing-mode:horizontal-tb;border-radius:999px;padding:12px 16px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+  .ai-tab-label{transform:none}
+  .ai-open .ai-tab{display:none}
+  .ai-dock{top:auto;height:82vh;bottom:0;width:100vw;padding:0;transform:translateY(100%)}
+  .ai-dock>.panel{border-radius:var(--radius-element) var(--radius-element) 0 0}
+}
+@media (prefers-reduced-motion:reduce){.ai-dock,.ai-tab{transition:none}}
+#boardStatus{white-space:normal;min-width:0;max-width:100%}
 </style>
 </head>
 <body>
@@ -590,7 +617,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
         </div>
       </div>
       <div class="panel term-c">
-        <div class="panel-head"><h3>Risk inspector</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="real" id="inspSrc">samples/nyc_high_gap_remains.json</span><button class="btn sm" id="copyJson">Copy JSON</button></div></div>
+        <div class="panel-head"><h3>Risk inspector</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="real" id="inspSrc">samples/nyc_high_gap_remains.json</span><button class="btn sm" id="copyJson">Copy JSON</button><button class="btn sm primary" data-ai-open type="button">Ask AI about this market</button></div></div>
         <div class="inspector">
           <pre class="code" id="riskJson" tabindex="0" aria-label="Risk analysis JSON"></pre>
           <div class="insp-side">
@@ -598,25 +625,6 @@ a.tick-item:hover .sym{color:var(--text-primary)}
             <div id="flagList"></div>
             <div class="panel-head"><span class="label">Proposed purchases</span><span class="label">catalog v1</span></div>
             <div id="purchaseList"></div>
-          </div>
-        </div>
-      </div>
-      <div class="panel term-c" id="gaiPanel">
-        <div class="panel-head"><div><h3>AI second opinion</h3><p class="label" style="margin-top:2px">Google Gemini, the AI model, which is separate from Gemini Exchange · advisory only · reads the market selected above</p></div><span class="tag info">Google Gemini · Workers AI backup</span></div>
-        <div class="gai-grid">
-          <div class="gai-left">
-            <p class="gai-help" style="margin-top:0">Google Gemini reads the selected market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. If Google Gemini is unavailable or out of quota, Cloudflare Workers AI (Llama 3.3 70B) answers instead, and the answer is labelled. It never changes Verity’s score, and nothing is bought from here.</p>
-            <div class="gai-actions">
-              <button class="btn primary" id="gaiReview" data-gai type="button">Review this market’s settlement rules</button>
-            </div>
-            <label class="label" for="gaiQ" style="margin-top:16px;display:block">Or ask a question about this market</label>
-            <textarea id="gaiQ" class="gai-input gai-q" rows="3" maxlength="1500" placeholder="e.g. Which report version settles this, and what could change the payout?"></textarea>
-            <div class="gai-actions"><button class="btn" id="gaiAsk" data-gai type="button">Ask Google Gemini</button></div>
-            <p class="gai-status" id="gaiStatus" role="status" aria-live="polite">Ready · up to 6 requests per minute</p>
-          </div>
-          <div class="gai-right">
-            <div class="copy-row"><span class="label">Model output</span><button class="btn sm" id="gaiCopy" type="button">Copy</button></div>
-            <div class="gai-out" id="gaiOut" aria-live="polite"><p class="muted">Pick a market above, then run a review or ask a question.</p></div>
           </div>
         </div>
       </div>
@@ -718,6 +726,28 @@ a.tick-item:hover .sym{color:var(--text-primary)}
   </div>
 </section>
 </main>
+
+
+<!-- AI second opinion: side dock that follows the page -->
+<button class="ai-tab" id="aiTab" type="button" aria-expanded="false" aria-controls="aiDock"><span class="ai-tab-dot" aria-hidden="true"></span><span class="ai-tab-label">AI second opinion</span></button>
+<aside class="ai-dock" id="aiDock" aria-label="AI second opinion" aria-hidden="true">
+  <div class="panel" id="gaiPanel">
+    <div class="ai-dock-head">
+      <div><h2 class="ai-dock-title">AI second opinion</h2><p class="label" style="margin-top:2px">Google Gemini · Workers AI backup · advisory only</p></div>
+      <button class="btn sm" id="aiClose" type="button" aria-label="Close AI panel">Close</button>
+    </div>
+    <div class="ai-dock-body">
+      <div class="ai-market"><span class="label">Market</span><p id="gaiMarket">—</p><a href="#terminal" class="ai-change" data-ai-change>Change market in the terminal</a></div>
+      <p class="gai-help">Google Gemini (the AI model, separate from Gemini Exchange) reads this market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. If Google Gemini is unavailable, Cloudflare Workers AI answers and the answer is labelled. It never changes Verity’s score, and nothing is bought from here.</p>
+      <button class="btn primary ai-full" id="gaiReview" data-gai type="button">Review this market’s settlement rules</button>
+      <label class="label" for="gaiQ" style="margin-top:16px;display:block">Or ask a question</label>
+      <textarea id="gaiQ" class="gai-input gai-q" rows="3" maxlength="1500" placeholder="e.g. Which report version settles this, and what could change the payout?"></textarea>
+      <div class="gai-actions"><button class="btn" id="gaiAsk" data-gai type="button">Ask</button><button class="btn sm ghost" id="gaiCopy" type="button">Copy answer</button></div>
+      <p class="gai-status" id="gaiStatus" role="status" aria-live="polite">Ready · up to 6 requests per minute</p>
+      <div class="gai-out" id="gaiOut" aria-live="polite"><p class="muted">Run a review or ask a question to see the model’s answer here.</p></div>
+    </div>
+  </div>
+</aside>
 
 <div class="drawer-backdrop" id="drawerBg"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" tabindex="-1">
@@ -1290,7 +1320,7 @@ function renderTerm(light){
   const pb=$('#probBadge'),cb=$('#candleBadge');pb.className=cb.className=m.live?'real':'demo';pb.textContent=m.live?'GEMINI EXCHANGE CANDLES':'DEMO FIXTURE PATH';cb.textContent=m.live?'GEMINI EXCHANGE':'DEMO FIXTURE';
   $('#probFoot').textContent=m.live?'Closing price of each Gemini Exchange candle for the contract shown. The band is the live bid–ask.':'The path ends at the real captured mid. Earlier points are a deterministic demo fixture.';
   $('#candleFoot').textContent=m.live?'Real 5-minute candles and live top of book. Order-book depth is not public.':'Top of book is real; candles and depth beyond it are fixtures.';
-  $('#mktQ').textContent=m.question;
+  $('#mktQ').textContent=m.question;if(typeof gaiSyncMarket==='function')gaiSyncMarket();
   if(light){drawProb();drawCandles();return;}
   renderProb();seedCandles();drawCandles();
 }
@@ -1516,7 +1546,16 @@ function reviewHTML(r,ctx,meta,pv){pv=pv||{name:'Google Gemini',tag:'<span class
    <table class="gai-cmp"><thead><tr><th>Category</th><th class="num">verity-rules-v1</th><th class="num">${esc(pv.name)}</th><th></th></tr></thead><tbody>${row('ambiguity','Ambiguity')}${row('source','Source')}${row('correlation','Correlation')}</tbody></table>
    ${(r.ambiguities||[]).length?`<h4 class="label" style="margin:14px 0 6px">Ambiguities it found</h4><ul class="gai-list">${r.ambiguities.map(a=>`<li><b>${esc(a.issue)}</b>${a.quote?`<div class="excerpt">${esc(a.quote)}</div>`:''}<span class="muted">${esc(a.why_it_matters||'')}</span></li>`).join('')}</ul>`:''}
    ${(r.research_to_close_gaps||[]).length?`<h4 class="label" style="margin:14px 0 6px">Research it suggests</h4><ul class="gai-list">${r.research_to_close_gaps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="label">Suggestions only. Verity buys nothing from this panel.</p>`:''}`;}
+function gaiSyncMarket(){const el=$('#gaiMarket');if(!el)return;const m=MARKETS[term.market];el.textContent=m?(m.live?'Live · ':'Nov 18 analysis · ')+m.question:'—';}
+const AID={open:false,last:null};
+function aiOpen(from){AID.last=from||document.activeElement;AID.open=true;gaiSyncMarket();const d=$('#aiDock');d.classList.add('open');d.setAttribute('aria-hidden','false');$('#aiTab').setAttribute('aria-expanded','true');document.body.classList.add('ai-open');setTimeout(()=>$('#gaiReview').focus(),RM.matches?0:200);}
+function aiClose(){AID.open=false;const d=$('#aiDock');d.classList.remove('open');d.setAttribute('aria-hidden','true');$('#aiTab').setAttribute('aria-expanded','false');document.body.classList.remove('ai-open');const t=AID.last&&document.contains(AID.last)?AID.last:$('#aiTab');t.focus();}
 (function gaiInit(){
+  $('#aiTab').addEventListener('click',e=>AID.open?aiClose():aiOpen(e.currentTarget));$('#aiClose').addEventListener('click',aiClose);
+  $$('[data-ai-open]').forEach(b=>b.addEventListener('click',e=>aiOpen(e.currentTarget)));
+  $$('[data-ai-change]').forEach(a=>a.addEventListener('click',()=>{if(matchMedia('(max-width:760px)').matches)aiClose();}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&AID.open&&!$('#drawer').classList.contains('open'))aiClose();});
+  gaiSyncMarket();
   $('#gaiReview').addEventListener('click',()=>gaiRun('review'));$('#gaiAsk').addEventListener('click',()=>gaiRun('ask'));
   $('#gaiQ').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();gaiRun('ask');}});
   $('#gaiCopy').addEventListener('click',()=>{if(!GAI.last){toast('Run a review first.');return;}copy(GAI.last.mode==='ask'?GAI.last.text:JSON.stringify(GAI.last.result,null,2),'Google Gemini answer copied');});
