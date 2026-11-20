@@ -1,10 +1,10 @@
-/*! @astryxdesign/core 0.7.16 pre-compiled CSS. MIT License, Meta Platforms, Inc. */
+/*! @astryxdesign/core 0.7.16 pre-compiled CSS (MIT, Meta Platforms, Inc.), unlayered so it wins over the page element styles inside the pop-up. */
 /* Astryx Pre-compiled StyleX CSS — all components */
 /* Auto-generated. Do not edit manually. */
 
-@layer reset, astryx-base, astryx-theme;
 
-@layer astryx-base {
+
+
   @property --x---_avatar-group-overlap { syntax: "*"; inherits: false;}
   @property --x---_codeblock-gutter-width { syntax: "*"; inherits: false;}
   @property --x---_hover-delay { syntax: "*"; inherits: false;}
@@ -2855,4 +2855,4 @@
   .x1f4wvdr[data-astryx-cell-gliding="line"]:not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#)::after{bottom:calc(-1 * var(--_table-row-glide-offset,0px))}
   .x2euz0u[data-astryx-cell-gliding="line"]:not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#)::after{height:0}
   .x54l71j[data-astryx-cell-gliding]:not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#):not(#\#)::before{margin-bottom:calc(-1 * var(--_table-row-glide-width,var(--_table-row-divider-app-width,var(--_table-row-divider-width,0px))))}
-}
+
