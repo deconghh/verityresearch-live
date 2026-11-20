@@ -1,12 +1,11 @@
 # verityresearch.us
 
-This repo only holds the **built** Verity website that GitHub Pages serves at https://verityresearch.us. Don't edit these files by hand.
+The live Verity site, served by GitHub Pages from this repo (custom domain in `CNAME`).
 
-- **Source:** `site/` on the `website-lovable` branch of the team repo `ubc-2026/verity`.
-- **Design:** made in Lovable (project "Verity: Market Clarity"), also published at https://verity-research.lovable.app.
+`index.html` is the whole site: one self-contained file with its CSS and JavaScript inline. Three.js r128 (cdnjs, pinned with SRI) and Google Fonts load externally, and the page falls back to a static coin and system fonts if they don't.
 
-## Update the live site
+The source parts and build script live in `ubc-2026/verity`, folder `site/` on the `website` branch. `DESIGN.md` is the approved design system.
 
-1. In `ubc-2026/verity`, `cd site`, run `npm install` and `npm run build:static`.
-2. Copy everything in `site/.output/public/` here, keeping `CNAME` and `.nojekyll`.
-3. Commit and push to `main`. Pages republishes in a minute or two.
+To publish: rebuild `index.html` there with `sh build.sh`, copy `dist/index.html` here, keep `CNAME` and `.nojekyll`, then push to `main`.
+
+Data rule: every quote and score comes from the Nov 17 and 18, 2026 Gemini Exchange captures and analysis. Anything simulated is labelled DEMO FIXTURE on the page.
