@@ -975,7 +975,7 @@ if('ResizeObserver'in window)new ResizeObserver(()=>drawCandles()).observe($('#c
         $('[data-sp]',el).innerHTML=spark(r.c.id);});}
   }
   function setLabel(){const age=Date.now()-lastOk;
-    if(mode==='live'&&age<STALE){lab.className='tick-status live';lab.innerHTML=`<span class="dot" aria-hidden="true"></span>Live · Gemini Exchange · <span class="num">${new Date(lastOk).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;}
+    if(mode==='live'&&age<STALE){lab.className='tick-status live';lab.innerHTML=`<span class="dot" aria-hidden="true"></span>Live · Gemini Exchange<span class="num"> · ${new Date(lastOk).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;}
     else if(mode==='live'){lab.className='tick-status stale';lab.textContent='Stale · retrying Gemini Exchange';}
     else if(mode==='fallback'){lab.className='tick-status stale';lab.textContent='Live feed unavailable · Nov 18 snapshot';}
     else{lab.className='tick-status';lab.textContent='Connecting to Gemini Exchange…';}}
@@ -988,7 +988,7 @@ if('ResizeObserver'in window)new ResizeObserver(()=>drawCandles()).observe($('#c
       const j=await r.json();if(!j||!Array.isArray(j.data))throw new Error('unexpected response');
       lastOk=Date.now();
       const byId=new Map();j.data.forEach(e=>(e.contracts||[]).forEach(c=>byId.set(c.id,{e,c})));
-      if(mode!=='live'||Date.now()-lastSelect>RESELECT||picks.some(p=>!byId.has(p.c.id))){picks=choose(j.data);lastSelect=Date.now();mode='live';if(picks.length){render();update();}else throw new Error('no quoted markets');}
+      if(mode!=='live'||Date.now()-lastSelect>RESELECT){picks=choose(j.data);lastSelect=Date.now();mode='live';if(picks.length){render();update();}else throw new Error('no quoted markets');}
       else{picks=picks.map(p=>{const n=byId.get(p.c.id);return n?{...p,e:n.e,c:n.c,vol:+(n.e.volume24h||n.e.volume||0)}:p;});update();}
     }catch(err){console.warn('Gemini Exchange ticker:',err.message);if(mode!=='live'){mode='fallback';fallback();}}
     finally{busy=false;setLabel();}
