@@ -1235,7 +1235,7 @@ function renderStats(){
 }
 const ANCHOR={user:false};['wheel','touchmove','keydown'].forEach(ev=>addEventListener(ev,e=>{if(ev==='keydown'&&!/^(Arrow|Page|Home|End| )/.test(e.key))return;ANCHOR.user=true;anchorTarget=null;},{passive:true}));
 let anchorTarget=null;$$('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{anchorTarget=a.getAttribute('href');ANCHOR.user=false;setTimeout(()=>{anchorTarget=null;},4000);}));
-function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(!el)return;requestAnimationFrame(()=>{const y=el.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);if(Math.abs(scrollY-y)>8)scrollTo({top:y,behavior:'instant'});});}
+function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(!el)return;const y=el.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);if(Math.abs(scrollY-y)>8)scrollTo({top:y,behavior:'instant'});}
 [300,1200,2500,5000].forEach(t=>setTimeout(keepAnchor,t));if(document.fonts)document.fonts.ready.then(keepAnchor);
 LIVE.on(()=>{const first=!BOARD.rendered;if(LIVE.events.length){renderBoard(false);BOARD.rendered=true;if(first)keepAnchor();}else if(LIVE.err&&!LIVE.lastOk){$('#topicPanel').innerHTML='<p class="empty">Live markets could not be loaded. The page will keep retrying; the analysed Nov 18 markets below still work.</p>';}renderStats();});
 setInterval(()=>{if(LIVE.lastOk)renderStats();},5000);
