@@ -970,9 +970,9 @@ window.__lpField=(function(){
   function fade(x,y){var k=1,M=48;zones.forEach(function(z){var dx=Math.max(z.l-x,0,x-z.r),dy=Math.max(z.t-y,0,y-z.b),d=Math.sqrt(dx*dx+dy*dy);var f=d>=M?1:.08+.92*(d/M);if(f<k)k=f;});return k;}
   /* Lattice cells inside the two arms of the V. */
   function layout(){cells=[];if(!card||!W)return;var cx=(card.l+card.r)/2,cw=card.r-card.l,
-      ay=Math.min(H-14,card.b+Math.max(70,cw*.2)),ty=Math.max(24,card.t-Math.max(150,cw*.36)),
-      half=Math.max(22,Math.min(38,cw*.07)),
-      tl={x:Math.max(18,card.l-cw*.2),y:ty},tr={x:Math.min(W-18,card.r+cw*.2),y:ty},ap={x:cx,y:ay};
+      ay=Math.min(H-16,card.b+Math.max(90,cw*.28)),ty=Math.max(16,card.t-Math.max(180,cw*.5)),
+      half=Math.max(26,Math.min(48,cw*.09)),
+      tl={x:Math.max(18,card.l-cw*.32),y:ty},tr={x:Math.min(W-16,card.r+cw*.32),y:ty},ap={x:cx,y:ay};
     function arm(T,side){var dx=ap.x-T.x,dy=ap.y-T.y,L=Math.sqrt(dx*dx+dy*dy);return {T:T,ux:dx/L,uy:dy/L,L:L,side:side};}
     var arms=[arm(tl,0),arm(tr,1)],x0=Math.floor((tl.x-half*2)/S)*S,x1=tr.x+half*2,y0=Math.floor((ty-half)/S)*S,y1=ay+half;
     for(var y=y0;y<=y1;y+=S)for(var x=x0;x<=x1;x+=S){
@@ -980,7 +980,7 @@ window.__lpField=(function(){
       if(fade(x,y)<.6)continue;
       var best=null;arms.forEach(function(A){var px=x-A.T.x,py=y-A.T.y,t=px*A.ux+py*A.uy,d=Math.abs(px*A.uy-py*A.ux);
         if(t>=0&&t<=A.L+half&&d<=half&&(!best||d<best.d))best={side:A.side,t:Math.min(1,t/A.L),d:d};});
-      if(best)cells.push({x:x,y:y,side:best.side,t:best.t,accent:y>ay-(ay-ty)*.16});}
+      if(best)cells.push({x:x,y:y,side:best.side,t:best.t,accent:y>ay-(ay-ty)*.2});}
   }
   function assign(){pts=[];if(!cells.length)return;
     [0,1].forEach(function(side){var cs=cells.filter(function(c){return c.side===side;}).sort(function(a,b){return a.t-b.t||a.x-b.x;}),
@@ -996,13 +996,13 @@ window.__lpField=(function(){
       cs.forEach(function(c,i){if(i>5)return;var m=mid(c);if(m==null)return;var ms=Math.max(36e5,Date.parse(e.expiryDate||'')-now||0),pr=c.prices||{};
         out.push({p:Math.max(0,Math.min(1,m)),h:ms,v:+e.volume||0,t:e.title+(c.label&&c.label!==e.title?': '+c.label:''),key:e.ticker+'|'+c.id,
           d:{ticker:e.ticker,contractId:c.id,title:e.title,outcome:c.label&&c.label!==e.title?c.label:'Yes',category:e.category||'',price:m,bid:pr.bestBid!=null?+pr.bestBid:null,ask:pr.bestAsk!=null?+pr.bestAsk:null,volume:+e.volume||0,volume24h:e.volume24h!=null?+e.volume24h:null,expiry:e.expiryDate||'',siblings:Math.max(0,cs.length-1)}});});});
-    var vmax=Math.max.apply(null,out.map(function(o){return o.v;}).concat([1]));out.forEach(function(o){o.r=Math.sqrt(1+8*(o.v/vmax));}); // 2 to 6 px across, area grows with volume
+    var vmax=Math.max.apply(null,out.map(function(o){return o.v;}).concat([1]));out.forEach(function(o){o.r=Math.sqrt(1.4+7.6*(o.v/vmax));}); // about 2.4 to 6 px across, area grows with volume
     mk=out;if(!W)size();else{measure();relayout();}}
   function redraw(){if(queued)return;queued=requestAnimationFrame(function(){queued=0;draw();});}
   function draw(){ctx.clearRect(0,0,W,H);if(!W)return;
     ctx.fillStyle='rgba(139,155,180,.22)';cells.forEach(function(c){if(!c.used)ctx.fillRect(c.x-.5,c.y-.5,1,1);}); // empty lattice keeps the V's outline
     pts.forEach(function(p,i){if(i===hover||i===sel)return;ctx.globalAlpha=fade(p.x,p.y);
-      ctx.fillStyle=p.accent?(p.r>2?'rgba(46,92,255,1)':'rgba(46,92,255,.9)'):(p.r>2?'rgba(140,166,255,.85)':'rgba(124,155,255,.7)');
+      ctx.fillStyle=p.accent?(p.r>2?'#5B7FFF':'rgba(74,112,255,.95)'):(p.r>2?'rgba(150,174,255,.9)':'rgba(124,155,255,.78)');
       ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.2832);ctx.fill();});
     ctx.globalAlpha=1;
     [sel,hover].forEach(function(i,n){if(i<0||!pts[i])return;var p=pts[i];
