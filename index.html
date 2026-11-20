@@ -495,6 +495,35 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 }
 @media (prefers-reduced-motion:reduce){.ai-dock,.ai-tab{transition:none}}
 #boardStatus{white-space:normal;min-width:0;max-width:100%}
+/* resizable dock + forecast */
+:root{--ai-w:440px}
+.ai-dock{width:min(var(--ai-w),calc(100vw - 24px))}
+.ai-open .ai-tab{right:min(calc(var(--ai-w) + 12px),calc(100vw - 12px))}
+.ai-resize{position:absolute;left:-6px;top:0;bottom:0;width:12px;cursor:ew-resize;z-index:2;touch-action:none}
+.ai-resize::after{content:"";position:absolute;left:4px;top:50%;width:4px;height:44px;margin-top:-22px;border-radius:2px;background:var(--border-strong);transition:background-color 150ms}
+.ai-resize:hover::after,.ai-resize:focus-visible::after,.ai-dock.resizing .ai-resize::after{background:var(--accent-blue-text)}
+.ai-dock.resizing{transition:none;user-select:none}
+@media (max-width:760px){.ai-resize{display:none}.ai-dock{width:100vw}}
+.fc-box{margin-top:14px;padding:12px;border:1px solid var(--border-hairline);border-radius:var(--radius-element);background:var(--bg-void)}
+.fc-big{display:flex;flex-direction:column;gap:2px;margin:6px 0 12px}
+.fc-big .num{font-size:2rem;line-height:1.1}
+.fc-big .muted{font-size:.82rem}
+.fc-row{display:grid;grid-template-columns:minmax(110px,38%) 1fr 6ch;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border-hairline);font-size:.85rem}
+.fc-l{display:flex;flex-direction:column;min-width:0}.fc-l .label{font-size:.64rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-bar{height:8px;background:var(--bg-elevated);border:1px solid var(--border-hairline);border-radius:2px;position:relative;overflow:hidden}
+.fc-bar i{position:absolute;left:0;top:0;bottom:0}
+.fc-bar i.mk{background:var(--text-muted)}.fc-bar i.gg{background:var(--accent-blue)}.fc-bar i.wa{background:var(--signal-warn)}.fc-bar i.en{background:var(--signal-yes)}
+.fc-v{text-align:right}
+.fc-why{margin-top:10px;font-size:.85rem}.fc-why summary{cursor:pointer;color:var(--accent-blue-text)}.fc-why p{margin-top:6px}
+.fc-note{font-size:.76rem;color:var(--text-muted);margin-top:12px}
+/* market details + outcomes */
+.mkt-grid{display:grid;grid-template-columns:5fr 7fr}
+.mkt-kv{padding:14px 16px;margin:0;border-right:1px solid var(--border-hairline);align-content:start}
+.mkt-out{min-width:0}
+.mkt-out tr.sel td{background:rgba(46,92,255,.12)}
+@media (max-width:1024px){.mkt-grid{grid-template-columns:1fr}.mkt-kv{border-right:0;border-bottom:1px solid var(--border-hairline)}}
+@media (min-width:1025px){.topic-panel{min-height:560px}}
+.ai-full{white-space:normal;height:auto;min-height:44px;padding:10px 14px;line-height:1.3;text-align:center}
 </style>
 </head>
 <body>
@@ -616,6 +645,13 @@ a.tick-item:hover .sym{color:var(--text-primary)}
           <div class="chart-foot"><span id="candleFoot">Top of book is real; candles and depth beyond it are fixtures.</span><span class="num" id="candleStamp">—</span></div>
         </div>
       </div>
+      <div class="panel term-c" id="mktPanel">
+        <div class="panel-head"><h3>Market details and outcomes</h3><span class="real" id="mktSrc">—</span></div>
+        <div class="mkt-grid">
+          <dl class="kv mkt-kv" id="mktDetails"></dl>
+          <div class="mkt-out"><div class="table-scroll" style="max-height:340px"><table><thead><tr><th scope="col">Outcome</th><th scope="col" class="num">Bid</th><th scope="col" class="num">Ask</th><th scope="col" class="num">Last</th><th scope="col" class="num">Mid</th><th scope="col"><span class="sr-only">Select</span></th></tr></thead><tbody id="mktOutcomes"></tbody></table></div></div>
+        </div>
+      </div>
       <div class="panel term-c">
         <div class="panel-head"><h3>Risk inspector</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="real" id="inspSrc">samples/nyc_high_gap_remains.json</span><button class="btn sm" id="copyJson">Copy JSON</button><button class="btn sm primary" data-ai-open type="button">Ask AI about this market</button></div></div>
         <div class="inspector">
@@ -731,6 +767,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 <!-- AI second opinion: side dock that follows the page -->
 <button class="ai-tab" id="aiTab" type="button" aria-expanded="false" aria-controls="aiDock"><span class="ai-tab-dot" aria-hidden="true"></span><span class="ai-tab-label">AI second opinion</span></button>
 <aside class="ai-dock" id="aiDock" aria-label="AI second opinion" aria-hidden="true">
+  <div class="ai-resize" id="aiResize" role="separator" aria-orientation="vertical" aria-label="Resize AI panel. Drag, or use the left and right arrow keys." aria-valuemin="320" aria-valuemax="900" aria-valuenow="440" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <div class="panel" id="gaiPanel">
     <div class="ai-dock-head">
       <div><h2 class="ai-dock-title">AI second opinion</h2><p class="label" style="margin-top:2px">Google Gemini · Workers AI backup · advisory only</p></div>
@@ -740,6 +777,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
       <div class="ai-market"><span class="label">Market</span><p id="gaiMarket">—</p><a href="#terminal" class="ai-change" data-ai-change>Change market in the terminal</a></div>
       <p class="gai-help">Google Gemini (the AI model, separate from Gemini Exchange) reads this market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. If Google Gemini is unavailable, Cloudflare Workers AI answers and the answer is labelled. It never changes Verity’s score, and nothing is bought from here.</p>
       <button class="btn primary ai-full" id="gaiReview" data-gai type="button">Review this market’s settlement rules</button>
+      <div class="fc-box"><span class="label">Forecast</span><p class="gai-help" style="margin:4px 0 8px">Google Gemini and Workers AI each estimate the outcome from this market’s real price history, recent changes, volume and rules. The page combines the two and compares them with the market price.</p><button class="btn ai-full" id="fcRun" data-gai type="button">Forecast this market with both models</button></div>
       <label class="label" for="gaiQ" style="margin-top:16px;display:block">Or ask a question</label>
       <textarea id="gaiQ" class="gai-input gai-q" rows="3" maxlength="1500" placeholder="e.g. Which report version settles this, and what could change the payout?"></textarea>
       <div class="gai-actions"><button class="btn" id="gaiAsk" data-gai type="button">Ask</button><button class="btn sm ghost" id="gaiCopy" type="button">Copy answer</button></div>
@@ -999,6 +1037,7 @@ function drawProb(){
   for(let k=0;k<=ticks;k++){const i=Math.round((s.length-1)*k/ticks);x.fillStyle='#8B9BB4';x.fillText(ptLabel(s[i],term.tf!=='1H'&&term.tf!=='24H'),Math.min(w-pad.r-16,Math.max(pad.l+16,X(i))),h-pad.b+8);}
   // bid/ask band at snapshot
   x.fillStyle='rgba(46,92,255,.12)';x.fillRect(pad.l,Y(m.ask),w-pad.l-pad.r,Y(m.bid)-Y(m.ask));
+  if(m.live&&typeof FC!=='undefined'){const f=FC.byContract.get(m.c.id);if(f){const fy=Y(Math.min(hi,Math.max(lo,f.p)));x.strokeStyle='#00C853';x.setLineDash([6,4]);x.lineWidth=1.5;x.beginPath();x.moveTo(pad.l,fy);x.lineTo(w-pad.r,fy);x.stroke();x.setLineDash([]);x.fillStyle='#00C853';x.textAlign='left';x.textBaseline='bottom';x.fillText('AI estimate '+(f.p*100).toFixed(1)+'%',pad.l+6,fy-3);x.textBaseline='middle';}}
   // area + line
   x.beginPath();x.moveTo(X(0),Y(s[0].p));for(let i=1;i<s.length;i++){const xm=(X(i-1)+X(i))/2,ym=(Y(s[i-1].p)+Y(s[i].p))/2;x.quadraticCurveTo(X(i-1),Y(s[i-1].p),xm,ym);}x.lineTo(X(s.length-1),Y(s[s.length-1].p));
   const path=new Path2D();// reuse for fill
@@ -1025,10 +1064,10 @@ probC.setAttribute('aria-describedby','probFoot');
 function probTable(){const m=MARKETS[term.market];$('#probTable').innerHTML=term.series.slice().reverse().map(d=>`<tr><td class="mono">${ptLabel(d,true)}</td><td class="num">${(d.p*100).toFixed(1)}¢${m.live?' (Gemini Exchange close)':d.ago===0?' (captured)':' (fixture)'}</td></tr>`).join('');}
 function renderProb(){const m=MARKETS[term.market];term.cursor=null;
   if(!m.live){term.series=makeSeries(term.market,term.tf);drawProb();probTable();return;}
-  const key=m.symbol+term.tf;term.series=[];term.msg='Loading Gemini Exchange candles…';drawProb();probTable();
+  const key=m.symbol+term.tf;term.series=[];term.foot='';term.msg='Loading Gemini Exchange candles…';drawProb();probTable();
   if(!m.symbol){term.msg='This contract has no instrument symbol, so no candles.';drawProb();return;}
   const [tf,n]=CTF[term.tf];gxCandles(m.symbol,tf,n).then(v=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key)return;
-    term.series=v.map(d=>({p:d.c,t:d.t,ago:0}));term.msg=v.length<2?'Not enough trading history for this timeframe yet.':'';drawProb();probTable();})
+    term.series=v.map(d=>({p:d.c,t:d.t,ago:0}));term.msg=v.length<2?'Not enough trading history for this timeframe yet.':'';const traded=v.filter(d=>d.v>0).length;term.foot=v.length?`Closing price of each Gemini Exchange candle. Trades in ${traded} of ${v.length} periods${traded<v.length/2?'; flat stretches mean no trades, so the last price carries forward':''}. The band is the live bid–ask.`:'';if(term.foot)$('#probFoot').textContent=term.foot;drawProb();probTable();})
    .catch(e=>{term.msg=e.message==='NoDataFound'?'No trades on this contract in this timeframe yet, so there are no candles. The quote above is live.':'Candles unavailable right now ('+e.message+').';drawProb();});}
 $$('#tfSeg button').forEach(b=>b.addEventListener('click',()=>{term.tf=b.dataset.tf;$$('#tfSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderProb();}));
 if('ResizeObserver'in window)new ResizeObserver(()=>drawProb()).observe(probW);
@@ -1195,7 +1234,11 @@ function renderStats(){
   else if(LIVE.lastOk){s.className='tick-status stale';s.textContent='Connection lost · showing data from '+new Date(LIVE.lastOk).toLocaleTimeString()+' · retrying';}
   else if(LIVE.err){s.className='tick-status stale';s.textContent='Gemini Exchange is unreachable right now ('+LIVE.err+'). Retrying every 15 s.';}
 }
-LIVE.on(()=>{if(LIVE.events.length){renderBoard(false);}else if(LIVE.err&&!LIVE.lastOk){$('#topicPanel').innerHTML='<p class="empty">Live markets could not be loaded. The page will keep retrying; the analysed Nov 18 markets below still work.</p>';}renderStats();});
+const ANCHOR={user:false};['wheel','touchmove','keydown'].forEach(ev=>addEventListener(ev,e=>{if(ev==='keydown'&&!/^(Arrow|Page|Home|End| )/.test(e.key))return;ANCHOR.user=true;anchorTarget=null;},{passive:true}));
+let anchorTarget=null;$$('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{anchorTarget=a.getAttribute('href');ANCHOR.user=false;setTimeout(()=>{anchorTarget=null;},4000);}));
+function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(!el)return;const y=el.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);if(Math.abs(scrollY-y)>8)scrollTo({top:y,behavior:'instant'});}
+[300,1200,2500,5000].forEach(t=>setTimeout(keepAnchor,t));if(document.fonts)document.fonts.ready.then(keepAnchor);
+LIVE.on(()=>{const first=!BOARD.rendered;if(LIVE.events.length){renderBoard(false);BOARD.rendered=true;if(first)keepAnchor();}else if(LIVE.err&&!LIVE.lastOk){$('#topicPanel').innerHTML='<p class="empty">Live markets could not be loaded. The page will keep retrying; the analysed Nov 18 markets below still work.</p>';}renderStats();});
 setInterval(()=>{if(LIVE.lastOk)renderStats();},5000);
 /* ---------- Ticker: live Gemini Exchange prediction markets ---------- */
 (function ticker(){
@@ -1318,12 +1361,32 @@ function renderTerm(light){
   $$('#flagList .flag>button').forEach(b=>{if(light&&openF.has(b.textContent)){b.setAttribute('aria-expanded','true');$('#'+b.getAttribute('aria-controls')).classList.add('open');}});$$('#flagList .flag>button').forEach(b=>b.addEventListener('click',()=>{const o=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',o);$('#'+b.getAttribute('aria-controls')).classList.toggle('open',o);}));
   $('#purchaseList').innerHTML=(m.live?livePurch(m):PURCH[m.key]).map(p=>`<div class="purchase"><span>${p.t}</span><span class="num">${p.p} USDC</span><span class="meta"><span class="tag ${p.state[0]}">${p.state[1]}</span> <code class="mono" style="font-size:.7rem">${p.id}</code><br>${p.meta}</span></div>`).join('');
   const pb=$('#probBadge'),cb=$('#candleBadge');pb.className=cb.className=m.live?'real':'demo';pb.textContent=m.live?'GEMINI EXCHANGE CANDLES':'DEMO FIXTURE PATH';cb.textContent=m.live?'GEMINI EXCHANGE':'DEMO FIXTURE';
-  $('#probFoot').textContent=m.live?'Closing price of each Gemini Exchange candle for the contract shown. The band is the live bid–ask.':'The path ends at the real captured mid. Earlier points are a deterministic demo fixture.';
+  if(!light||!m.live)$('#probFoot').textContent=m.live?(term.foot||'Closing price of each Gemini Exchange candle for the contract shown. The band is the live bid–ask.'):'The path ends at the real captured mid. Earlier points are a deterministic demo fixture.';
   $('#candleFoot').textContent=m.live?'Real 5-minute candles and live top of book. Order-book depth is not public.':'Top of book is real; candles and depth beyond it are fixtures.';
   $('#mktQ').textContent=m.question;if(typeof gaiSyncMarket==='function')gaiSyncMarket();
+  renderMarketPanel(m);
   if(light){drawProb();drawCandles();return;}
   renderProb();seedCandles();drawCandles();
 }
+function renderMarketPanel(m){const dl=$('#mktDetails'),tb=$('#mktOutcomes');if(!dl)return;
+  const row=(k,v)=>v==null||v===''?'':`<dt>${k}</dt><dd>${v}</dd>`;const when=iso=>iso?new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' ('+closesIn(iso)+')':null;
+  if(m.live){const e=m.e,c=m.c,p=c.prices||{};const b=lnum(p.bestBid),a=lnum(p.bestAsk);
+    $('#mktSrc').textContent='live · Gemini Exchange · '+new Date(LIVE.lastOk||Date.now()).toLocaleTimeString();
+    dl.innerHTML=row('Event',esc(e.title))+row('Category',esc([e.category,typeof e.subcategory==='string'?e.subcategory:(e.subcategory&&(e.subcategory.name||e.subcategory.label||e.subcategory.title))].filter(Boolean).join(' · ')))+row('Ticker','<span class="mono">'+esc(e.ticker)+'</span>')
+      +row('Selected outcome',esc(c.label))+row('Bid / ask',b!=null||a!=null?`<span class="num">${b!=null?(b*100).toFixed(0)+'¢':'—'} / ${a!=null?(a*100).toFixed(0)+'¢':'—'}${b!=null&&a!=null?' · spread '+Math.round((a-b)*100)+'¢':''}</span>`:'No live quote')
+      +row('Last trade',p.lastTradePrice!=null?'<span class="num">'+(+p.lastTradePrice*100).toFixed(1)+'¢</span>':'No trades yet')
+      +row('Volume','<span class="num">'+lusd(e.volume)+' total · '+lusd(e.volume24h)+' in 24h</span>')
+      +row('Closes',when(c.expiryDate||e.expiryDate))+row('Starts',e.startTime?(Date.parse(e.startTime)<=Date.now()?new Date(e.startTime).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' (started)':when(e.startTime)):null)
+      +row('Settlement source',e.sourceDetails?esc(Object.values(e.sourceDetails).join(' · ')):null)
+      +row('Rules',e.termsLink||c.termsAndConditionsUrl?`<a href="${esc(e.termsLink||c.termsAndConditionsUrl)}" target="_blank" rel="noopener">Terms PDF</a>`:'No terms link')
+      +row('Outcomes',String((e.contracts||[]).length));
+    const cs=(e.contracts||[]).slice().sort((x,y)=>(lmid(y.prices)??-1)-(lmid(x.prices)??-1));
+    tb.innerHTML=cs.map(x=>{const q=x.prices||{},mm=lmid(q),sel=x.id===c.id;const f=v=>v==null?'—':(+v*100).toFixed(0)+'¢';
+      return `<tr class="${sel?'sel':''}"><td style="white-space:normal">${esc(x.label)}${x.status!=='active'?' <span class="label">'+esc(x.status)+'</span>':''}</td><td class="num">${f(q.bestBid)}</td><td class="num">${f(q.bestAsk)}</td><td class="num">${f(q.lastTradePrice)}</td><td class="num">${mm==null?'—':(mm*100).toFixed(1)+'¢'}</td><td>${sel?'<span class="tag info">Shown</span>':`<button class="btn sm" data-pick="${esc(x.id)}" ${mm==null?'disabled title="No price yet"':''}>Show</button>`}</td></tr>`;}).join('');
+    $$('#mktOutcomes [data-pick]').forEach(btn=>btn.addEventListener('click',()=>{const x=e.contracts.find(k=>k.id===btn.dataset.pick);if(x)selectLive(e,x,false);}));}
+  else{const J=m.key==='nyc'?NYC_JSON:OKC_JSON,q=J.quoted_price;$('#mktSrc').textContent='Nov 18, 2026 capture';
+    dl.innerHTML=row('Market',esc(m.question))+row('Ticker','<span class="mono">'+esc(J.event_ticker)+'</span>')+row('Outcome',esc(q.outcome_label))+row('Bid / ask','<span class="num">'+(q.best_bid*100).toFixed(0)+'¢ / '+(q.best_ask*100).toFixed(0)+'¢</span>')+row('Volume','<span class="num">$'+(+q.volume_usd).toLocaleString()+'</span>')+row('Source',esc(m.source));
+    tb.innerHTML=`<tr><td colspan="6" class="muted" style="white-space:normal">Only the analysed outcome was captured on Nov 18. Pick a live market to see every outcome with live prices.</td></tr>`;}}
 function selectLive(e,c,scroll){MARKETS.live=liveMarket(e,c);term.market='live';term.userPicked=true;
   $$('[data-market]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.market==='live'));$('#liveBtn').disabled=false;$('#liveBtn').textContent='Live: '+ltitle(e.title).slice(0,34);
   const sel=$('#liveSel');if(sel)sel.value=c.id;renderTerm();if(scroll)$('#terminal').scrollIntoView({behavior:RM.matches?'auto':'smooth'});}
@@ -1560,6 +1623,72 @@ function aiClose(){AID.open=false;const d=$('#aiDock');d.classList.remove('open'
   $('#gaiQ').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();gaiRun('ask');}});
   $('#gaiCopy').addEventListener('click',()=>{if(!GAI.last){toast('Run a review first.');return;}copy(GAI.last.mode==='ask'?GAI.last.text:JSON.stringify(GAI.last.result,null,2),'Google Gemini answer copied');});
 })();
+
+/* ---------- Combined AI forecast (Google Gemini + Workers AI) ---------- */
+const FC={busy:false,byContract:new Map()};
+const r3=v=>v==null||isNaN(v)?null:Math.round(v*1000)/1000;
+async function historyFor(m){
+  const [h,d]=await Promise.all([gxCandles(m.symbol,'1hr',168).catch(()=>[]),gxCandles(m.symbol,'1day',90).catch(()=>[])]);
+  if(h.length<2&&d.length<2)return null;
+  const hc=h.map(x=>x.c),last=hc.length?hc[hc.length-1]:d[d.length-1].c;
+  const ago=n=>hc.length>n?hc[hc.length-1-n]:null;
+  const rets=hc.slice(1).map((v,i)=>v-hc[i]);const mean=rets.reduce((a,b)=>a+b,0)/(rets.length||1);
+  const sd=Math.sqrt(rets.reduce((a,b)=>a+(b-mean)**2,0)/(rets.length||1));
+  const vol24=h.slice(-24).reduce((a,x)=>a+x.v,0),vol7=h.reduce((a,x)=>a+x.v,0);
+  return {source:'Gemini Exchange v2 candles (closes are implied probability, 0-1)',hourly_points:h.length,daily_points:d.length,
+    last_close:r3(last),change_1h:r3(ago(1)!=null?last-ago(1):null),change_24h:r3(ago(24)!=null?last-ago(24):null),change_7d:r3(hc.length>1?last-hc[0]:null),
+    min_7d:r3(hc.length?Math.min(...hc):null),max_7d:r3(hc.length?Math.max(...hc):null),hourly_volatility:r3(sd),
+    hours_with_trades_7d:h.filter(x=>x.v>0).length,volume_24h:Math.round(vol24),volume_7d:Math.round(vol7),
+    hourly_closes_every_4h:h.filter((x,i)=>i%4===0||i===h.length-1).map(x=>[new Date(x.t).toISOString().slice(0,13),r3(x.c)]),
+    daily_closes:d.slice(-60).map(x=>[new Date(x.t).toISOString().slice(0,10),r3(x.c)])};}
+function pct(p){return p==null?'—':(p*100).toFixed(1)+'%';}
+function fcHTML(res,m,hist,ms){const ok=res.forecasts.filter(f=>f.ok);const ps=ok.map(f=>+f.result.probability_yes);
+  const ens=ps.length?ps.reduce((a,b)=>a+b,0)/ps.length:null;const spread=ps.length===2?Math.abs(ps[0]-ps[1]):null;
+  const agree=spread==null?'Only one model answered':spread<=.05?'The two models agree closely':spread<=.15?'The two models roughly agree':'The two models disagree';
+  const bar=(label,p,cls,sub)=>`<div class="fc-row"><span class="fc-l">${label}${sub?`<span class="label">${esc(sub)}</span>`:''}</span><span class="fc-bar"><i class="${cls}" style="width:${p==null?0:Math.max(1,p*100)}%"></i></span><span class="num fc-v">${pct(p)}</span></div>`;
+  const name=f=>f.provider==='google-gemini'?'Google Gemini':'Workers AI';
+  return `<div class="gai-meta"><span class="tag info">Combined AI forecast · experimental</span><span class="label">${(ms/1000).toFixed(1)} s · ${new Date().toLocaleTimeString()}</span></div>
+   <div class="fc-big"><span class="label">Combined estimate, P(${esc(m.c.label||'Yes')})</span><span class="num">${pct(ens)}</span><span class="muted">${agree}${spread!=null?' (gap '+(spread*100).toFixed(1)+' pts)':''}. Market price: ${pct(m.mid)}.</span></div>
+   ${bar('Market price',m.mid,'mk','Gemini Exchange mid')}
+   ${res.forecasts.map(f=>f.ok?bar(name(f),+f.result.probability_yes,f.provider==='google-gemini'?'gg':'wa',String(f.model||'').replace(/^@cf\/[^/]+\//,'')+' · '+f.result.confidence+' confidence'):`<div class="fc-row"><span class="fc-l">${name(f)}<span class="label">unavailable (${esc(f.reason)})</span></span><span class="fc-bar"></span><span class="num fc-v">—</span></div>`).join('')}
+   ${bar('Combined',ens,'en','average of the models that answered')}
+   ${ok.map(f=>`<details class="fc-why"><summary>${name(f)}: why</summary><p>${esc(f.result.reasoning||'')}</p>${(f.result.drivers||[]).length?`<p class="label">Drivers</p><ul class="gai-list">${f.result.drivers.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${(f.result.risks||[]).length?`<p class="label">Risks</p><ul class="gai-list">${f.result.risks.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</details>`).join('')}
+   <p class="fc-note">Built from ${hist.hourly_points} hourly and ${hist.daily_points} daily Gemini Exchange candles plus the settlement rules. This is an experimental model estimate, not a verified result or trading advice. The market price already combines traders’ views and is often the better guide. Verity places no trades.</p>`;}
+async function runForecast(){if(FC.busy)return;const m=MARKETS[term.market];const out=$('#gaiOut');
+  if(!m.live){gaiStatus('Forecasts need a live market with real price history. Pick one in the terminal.','warn');out.innerHTML='<div class="box warn"><span class="tag warn">! Live market needed</span><p style="font-size:.86rem;margin-top:8px">The Nov 18 markets only have demo price paths, so they can’t be forecast honestly. Choose a live market in the terminal.</p></div>';return;}
+  if(!m.symbol){gaiStatus('This contract has no price history to forecast from.','warn');return;}
+  FC.busy=true;const btn=$('#fcRun');btn.setAttribute('aria-busy','true');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=true);
+  out.innerHTML='<p class="muted">Reading Gemini Exchange price history…</p>';gaiStatus('Loading price history…');const t0=performance.now();
+  try{const hist=await historyFor(m);if(!hist)throw Object.assign(new Error('This contract has no trading history yet, so there is nothing to forecast from.'),{status:-1});
+    out.innerHTML='<p class="muted">Asking Google Gemini and Workers AI…</p>';gaiStatus('Waiting for both models…');
+    const ctx=fitContext(marketContext());ctx.history=hist;
+    const r=await fetch(GAI.endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mode:'forecast',market:ctx})});
+    const j=await r.json().catch(()=>({}));
+    if(r.status===400&&/review mode/i.test(j.error||''))throw Object.assign(new Error('The AI service needs the v4 update to run forecasts. Run the latest redeploy-verity-gemini.ps1.'),{status:-1});
+    if(!r.ok)throw Object.assign(new Error(j.error||''),{status:r.status});
+    if(!Array.isArray(j.forecasts))throw Object.assign(new Error('Unexpected response from the AI service.'),{status:-1});
+    out.innerHTML=fcHTML(j,m,hist,performance.now()-t0);
+    const ps=j.forecasts.filter(f=>f.ok).map(f=>+f.result.probability_yes);
+    if(ps.length){FC.byContract.set(m.c.id,{p:ps.reduce((a,b)=>a+b,0)/ps.length,t:Date.now()});drawProb();}
+    GAI.last={mode:'forecast',result:j};gaiStatus('Forecast ready. The dashed line on the terminal chart marks the combined estimate.','ok');}
+  catch(e){const msg=e.status===-1?e.message:gaiErr(e.status||0,e.message);out.innerHTML=`<div class="box no"><span class="tag no">✕ Not available</span><p style="font-size:.86rem;margin-top:8px">${esc(msg)}</p></div>`;gaiStatus(msg,'no');}
+  finally{FC.busy=false;btn.removeAttribute('aria-busy');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=false);}}
+$('#fcRun').addEventListener('click',runForecast);
+
+/* ---------- Resizable dock ---------- */
+(function dockResize(){const d=$('#aiDock'),h=$('#aiResize');const KEY='verity.aiDockWidth';
+  const clamp=w=>Math.max(320,Math.min(w,Math.min(900,innerWidth-80)));
+  const set=w=>{w=clamp(w);document.documentElement.style.setProperty('--ai-w',w+'px');h.setAttribute('aria-valuenow',Math.round(w));return w;};
+  let w=440;try{const s=+localStorage.getItem(KEY);if(s)w=s;}catch(e){}set(w);
+  const save=()=>{try{localStorage.setItem(KEY,Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))));}catch(e){}};
+  h.addEventListener('pointerdown',e=>{if(matchMedia('(max-width:760px)').matches)return;e.preventDefault();h.setPointerCapture(e.pointerId);d.classList.add('resizing');
+    const move=ev=>set(innerWidth-ev.clientX-12);const up=()=>{h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up);d.classList.remove('resizing');save();};
+    h.addEventListener('pointermove',move);h.addEventListener('pointerup',up);});
+  h.addEventListener('keydown',e=>{const cur=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))||440;
+    if(e.key==='ArrowLeft'){e.preventDefault();set(cur+32);save();}if(e.key==='ArrowRight'){e.preventDefault();set(cur-32);save();}
+    if(e.key==='Home'){e.preventDefault();set(320);save();}if(e.key==='End'){e.preventDefault();set(900);save();}});
+  h.addEventListener('dblclick',()=>{set(440);save();});
+  addEventListener('resize',()=>set(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-w'))||440));})();
 /* ---------- Reconciler ledger (demo fixtures) ---------- */
 const STATUS={ok:['ok','✓ Matched & verified'],pnd:['no','✕ Paid, not delivered'],dnp:['warn','! Delivered, not paid'],dup:['info','≡ Duplicate, deduplicated'],nonce:['info','≡ Replay blocked, nonce used'],mis:['no','✕ Mismatched request']};
 const FORECAST_REQ={...REQ,resource:'/v1/catalog/cat-point-forecast-v1',amount:'20000',request_id:'req-nyc-0002',expires_at:'2026-11-18T01:12:00Z'};
