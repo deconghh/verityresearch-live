@@ -467,6 +467,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 .gai-list{margin:0;padding-left:18px;font-size:.86rem}.gai-list li{margin:6px 0}
 .gai-text p+p{margin-top:8px}.gai-text ul{margin:6px 0;padding-left:18px}
 #gaiPanel.connected #gaiTag{color:var(--signal-yes)}
+.gai-note{font-size:.82rem;color:var(--signal-warn);margin:-2px 0 10px}
 </style>
 </head>
 <body>
@@ -601,10 +602,10 @@ a.tick-item:hover .sym{color:var(--text-primary)}
         </div>
       </div>
       <div class="panel term-c" id="gaiPanel">
-        <div class="panel-head"><div><h3>AI second opinion</h3><p class="label" style="margin-top:2px">Google Gemini, the AI model, which is separate from Gemini Exchange · advisory only · reads the market selected above</p></div><span class="tag info">gemini-2.5-flash</span></div>
+        <div class="panel-head"><div><h3>AI second opinion</h3><p class="label" style="margin-top:2px">Google Gemini, the AI model, which is separate from Gemini Exchange · advisory only · reads the market selected above</p></div><span class="tag info">Google Gemini · Workers AI backup</span></div>
         <div class="gai-grid">
           <div class="gai-left">
-            <p class="gai-help" style="margin-top:0">Google Gemini reads the selected market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. It never changes Verity’s score, and nothing is bought from here.</p>
+            <p class="gai-help" style="margin-top:0">Google Gemini reads the selected market’s settlement rules, scores ambiguity, source and correlation, and compares them with Verity’s code rules. If Google Gemini is unavailable or out of quota, Cloudflare Workers AI (Llama 3.3 70B) answers instead, and the answer is labelled. It never changes Verity’s score, and nothing is bought from here.</p>
             <div class="gai-actions">
               <button class="btn primary" id="gaiReview" data-gai type="button">Review this market’s settlement rules</button>
             </div>
@@ -656,7 +657,7 @@ a.tick-item:hover .sym{color:var(--text-primary)}
     <div class="sec-head"><span class="idx">05 / Architecture</span><h2 id="stackTitle">Four layers, each with one job</h2><p>The analysis only proposes. A separate payment service holds the signer and decides. That split is the whole safety argument.</p></div>
     <div class="matrix" role="table" aria-label="Four-layer architecture">
       <div class="row head" role="row"><div role="columnheader">Layer</div><div role="columnheader">Name</div><div role="columnheader">Responsibility</div><div role="columnheader">Technology</div></div>
-      <div class="row" role="row"><div role="cell" class="num muted">L1</div><div role="cell" class="layer">Brain</div><div role="cell">Reads the contract, scores resolution risk, finds gaps, proposes purchases</div><div role="cell" class="tech">Gemini Exchange public API · verity-rules-v1 (code rules, score of record) · optional Google Gemini second opinion (via Verity’s Cloudflare Worker, advisory)</div></div>
+      <div class="row" role="row"><div role="cell" class="num muted">L1</div><div role="cell" class="layer">Brain</div><div role="cell">Reads the contract, scores resolution risk, finds gaps, proposes purchases</div><div role="cell" class="tech">Gemini Exchange public API · verity-rules-v1 (code rules, score of record) · optional Google Gemini second opinion with Cloudflare Workers AI as backup (via Verity’s Worker, advisory)</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L2</div><div role="cell" class="layer">Wallet</div><div role="cell">Pays for exactly the requested resource, once</div><div role="cell" class="tech">x402 · EIP-3009 · USDC on Arc Testnet</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L3</div><div role="cell" class="layer">Safeguard</div><div role="cell">Enforces tiers, the 25 USDC budget and human approval</div><div role="cell" class="tech">Policy engine · ElevenLabs voice · wallet signature</div></div>
       <div class="row" role="row"><div role="cell" class="num muted">L4</div><div role="cell" class="layer">Auditor</div><div role="cell">Matches each payment to a verified delivery</div><div role="cell" class="tech">QuickNode Streams · reconciler</div></div>
@@ -1467,10 +1468,15 @@ function renderTabs(){const C=tabContent();$('#tabPanels').innerHTML=Object.entr
    Google API key as a Worker secret. No key is ever in this page, in the browser,
    or in this repo. verity-rules-v1 remains the score of record. */
 const GAI={endpoint:'https://verity-gemini.safe-572.workers.dev/review',model:'gemini-2.5-flash',busy:false,last:null};
+const FALLBACK_WHY={quota:'Google Gemini’s quota was used up',unreachable:'Google Gemini could not be reached',no_key:'Google Gemini is not configured',blocked:'Google Gemini declined to answer',empty:'Google Gemini returned an empty answer'};
+function providerOf(j){const backup=j.provider==='workers-ai';const name=backup?'Workers AI ('+String(j.modelVersion||'').replace(/^@cf\/[^/]+\//,'')+')':'Google Gemini';
+  const why=backup?(FALLBACK_WHY[j.fallbackReason]||('Google Gemini was unavailable'+(j.fallbackReason?' ('+j.fallbackReason+')':''))):'';
+  return {backup,name,tag:backup?'<span class="tag warn">! Backup · Cloudflare Workers AI</span>':'<span class="tag info">Google Gemini · advisory</span>',note:backup?`<p class="gai-note">${esc(why)}, so Verity’s backup model answered.</p>`:''};}
 try{localStorage.removeItem('verity.googleGeminiKey');}catch(e){} // clean up keys saved by the earlier bring-your-own-key version
 function gaiErr(status,msg){
   if(status===429)return msg&&/quota/i.test(msg)?'Google Gemini’s quota is used up for now. Try again later.':'Too many reviews from this connection. Wait a minute and try again (limit: 6 per minute).';
   if(status===503)return 'The review service is still being set up.';
+  if(status===502)return msg||'Both Google Gemini and the backup model are unavailable right now. Try again in a minute.';
   if(status===403)return 'The review service only answers requests from verityresearch.us.';
   if(status===413)return 'This market’s data is too large to send. Try another market.';
   if(status===0)return 'Couldn’t reach the review service. Check your connection and try again.';
@@ -1495,19 +1501,19 @@ async function gaiRun(mode){if(GAI.busy)return;const q=$('#gaiQ').value.trim();
     status=r.status;const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||''),{status});
     const cand=j.candidates&&j.candidates[0];const text=cand&&cand.content&&cand.content.parts?cand.content.parts.map(p=>p.text||'').join(''):'';
     if(!text)throw Object.assign(new Error(j.promptFeedback&&j.promptFeedback.blockReason?'Google Gemini declined to answer ('+j.promptFeedback.blockReason+').':'Google Gemini returned an empty answer'+(cand&&cand.finishReason?' ('+cand.finishReason+')':'')+'.'),{status:-1});
-    const meta=`${esc(j.modelVersion||GAI.model)} · ${(Math.round(performance.now()-t0)/1000).toFixed(1)} s${j.usageMetadata&&j.usageMetadata.totalTokenCount?' · '+j.usageMetadata.totalTokenCount+' tokens':''} · ${new Date().toLocaleTimeString()}`;
-    if(mode==='ask'){GAI.last={mode,text};out.innerHTML=`<div class="gai-meta"><span class="tag info">Google Gemini · advisory</span><span class="label">${meta}</span></div><div class="gai-text">${mdLite(text)}</div>`;}
-    else{let res;try{res=JSON.parse(text);}catch(e){throw Object.assign(new Error('Google Gemini’s answer wasn’t valid JSON. Try again.'),{status:-1});}GAI.last={mode,result:res};out.innerHTML=reviewHTML(res,ctx,meta);}
-    gaiStatus('Done. This is a model opinion; verity-rules-v1 is still the score Verity uses.','ok');}
+    const pv=providerOf(j);const meta=`${esc(j.modelVersion||GAI.model)} · ${(Math.round(performance.now()-t0)/1000).toFixed(1)} s${j.usageMetadata&&j.usageMetadata.totalTokenCount?' · '+j.usageMetadata.totalTokenCount+' tokens':''} · ${new Date().toLocaleTimeString()}`;
+    if(mode==='ask'){GAI.last={mode,text};out.innerHTML=`<div class="gai-meta">${pv.tag}<span class="label">${meta}</span></div>${pv.note}<div class="gai-text">${mdLite(text)}</div>`;}
+    else{let res;try{res=JSON.parse(text);}catch(e){throw Object.assign(new Error('Google Gemini’s answer wasn’t valid JSON. Try again.'),{status:-1});}GAI.last={mode,result:res};out.innerHTML=reviewHTML(res,ctx,meta,pv);}
+    gaiStatus((pv.backup?'Answered by the backup model. ':'')+'Done. This is a model opinion; verity-rules-v1 is still the score Verity uses.',pv.backup?'warn':'ok');}
   catch(e){const msg=e.status===-1?e.message:gaiErr(e.status??status,e.message);out.innerHTML=`<div class="box no"><span class="tag no">✕ Not available</span><p style="font-size:.86rem;margin-top:8px">${esc(msg)}</p></div>`;gaiStatus(msg,'no');}
   finally{GAI.busy=false;btn.removeAttribute('aria-busy');$$('#gaiPanel [data-gai]').forEach(x=>x.disabled=false);}}
 function mdLite(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^\s*[-*] (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,s=>'<ul>'+s.replace(/\n/g,'')+'</ul>').replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>')+'</p>';}
-function reviewHTML(r,ctx,meta){const ru=ctx.verity_rules_v1||{};const rs=k=>{const v=ru[k]||(ru.scores&&ru.scores[k]);return v?(Array.isArray(v)?v[0]:v.score):null;};
+function reviewHTML(r,ctx,meta,pv){pv=pv||{name:'Google Gemini',tag:'<span class="tag info">Google Gemini · advisory</span>',note:''};const ru=ctx.verity_rules_v1||{};const rs=k=>{const v=ru[k]||(ru.scores&&ru.scores[k]);return v?(Array.isArray(v)?v[0]:v.score):null;};
   const s=r.scores||{};const row=(k,l)=>`<tr><td>${l}</td><td class="num">${rs(k)??'—'}</td><td class="num">${s[k]??'—'}</td><td>${rs(k)!=null&&s[k]!=null&&rs(k)!==s[k]?'<span class="tag warn">! differs</span>':'<span class="tag neutral">– same</span>'}</td></tr>`;
-  return `<div class="gai-meta"><span class="tag info">Google Gemini · advisory, not the score of record</span><span class="label">${meta}</span></div>
+  return `<div class="gai-meta">${pv.tag}<span class="label">${meta}</span></div>${pv.note}
    <p class="gai-sum">${esc(r.summary||'')}</p>
    <dl class="kv"><dt>Settlement source</dt><dd>${esc(r.settlement_source||'unknown')}</dd><dt>Model confidence</dt><dd>${esc(r.confidence||'—')}</dd><dt>Agrees with rules</dt><dd>${r.agrees_with_rules_analyst?'<span class="tag ok">✓ yes</span>':'<span class="tag warn">! no</span>'} ${esc(r.disagreement||'')}</dd></dl>
-   <table class="gai-cmp"><thead><tr><th>Category</th><th class="num">verity-rules-v1</th><th class="num">Google Gemini</th><th></th></tr></thead><tbody>${row('ambiguity','Ambiguity')}${row('source','Source')}${row('correlation','Correlation')}</tbody></table>
+   <table class="gai-cmp"><thead><tr><th>Category</th><th class="num">verity-rules-v1</th><th class="num">${esc(pv.name)}</th><th></th></tr></thead><tbody>${row('ambiguity','Ambiguity')}${row('source','Source')}${row('correlation','Correlation')}</tbody></table>
    ${(r.ambiguities||[]).length?`<h4 class="label" style="margin:14px 0 6px">Ambiguities it found</h4><ul class="gai-list">${r.ambiguities.map(a=>`<li><b>${esc(a.issue)}</b>${a.quote?`<div class="excerpt">${esc(a.quote)}</div>`:''}<span class="muted">${esc(a.why_it_matters||'')}</span></li>`).join('')}</ul>`:''}
    ${(r.research_to_close_gaps||[]).length?`<h4 class="label" style="margin:14px 0 6px">Research it suggests</h4><ul class="gai-list">${r.research_to_close_gaps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="label">Suggestions only. Verity buys nothing from this panel.</p>`:''}`;}
 (function gaiInit(){
