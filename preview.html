@@ -952,7 +952,7 @@ function renderProb(){const m=MARKETS[term.market];term.cursor=null;
   if(!m.symbol){term.msg='This contract has no instrument symbol, so no candles.';drawProb();return;}
   const [tf,n]=CTF[term.tf];gxCandles(m.symbol,tf,n).then(v=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key)return;
     term.series=v.map(d=>({p:d.c,t:d.t,ago:0}));term.msg=v.length<2?'Not enough trading history for this timeframe yet.':'';drawProb();probTable();})
-   .catch(e=>{term.msg='Candles unavailable right now ('+e.message+').';drawProb();});}
+   .catch(e=>{term.msg=e.message==='NoDataFound'?'No trades on this contract in this timeframe yet, so there are no candles. The quote above is live.':'Candles unavailable right now ('+e.message+').';drawProb();});}
 $$('#tfSeg button').forEach(b=>b.addEventListener('click',()=>{term.tf=b.dataset.tf;$$('#tfSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderProb();}));
 if('ResizeObserver'in window)new ResizeObserver(()=>drawProb()).observe(probW);
 
@@ -961,7 +961,7 @@ const cand={list:[],paused:false,vis:false,timer:0,ticks:0,dirty:true,cursor:nul
 async function liveCandles(){const m=MARKETS[term.market];if(!m.live||!m.symbol)return;const key=m.symbol;
   try{const v=await gxCandles(m.symbol,'5m',48);if(MARKETS[term.market].symbol!==key)return;cand.list=v;cand.msg=v.length<2?'Not enough 5-minute history yet.':'';
     $('#candleStamp').textContent='Gemini 5m candles · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}
-  catch(e){cand.msg='Candles unavailable ('+e.message+').';}
+  catch(e){cand.msg=e.message==='NoDataFound'?'No trades yet, so no candles. Top of book is live.':'Candles unavailable ('+e.message+').';}
   requestAnimationFrame(drawCandles);}
 function seedCandles(){if(MARKETS[term.market].live){cand.list=[];cand.msg='Loading Gemini Exchange candles…';liveCandles();candleSchedule();return;}cand.msg='';
   const m=MARKETS[term.market],r=rng('c'+term.market);let p=m.mid;const L=[];
@@ -1006,7 +1006,7 @@ const GX='https://api.gemini.com';
 const LIVE={events:[],total:null,pf:new Map(),spark:new Map(),lastOk:0,err:null,subs:[],timer:0,busy:false,
   on(f){this.subs.push(f);},
   emit(){this.subs.forEach(f=>{try{f(this);}catch(e){console.warn(e);}});},
-  async get(path,ms=8000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(GX+path,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(t);}},
+  async get(path,ms=8000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(GX+path,{cache:'no-store',signal:c.signal});if(!r.ok){let why='HTTP '+r.status;try{const j=await r.json();if(j&&j.reason)why=j.reason;}catch(e){}throw new Error(why);}return await r.json();}finally{clearTimeout(t);}},
   async poll(){if(this.busy||document.hidden)return;this.busy=true;
     try{const [p0,p1,pf]=await Promise.all([this.get('/v1/prediction-markets/events?status=active&limit=100'),this.get('/v1/prediction-markets/events?status=active&limit=100&offset=100').catch(()=>({data:[]})),this.get('/v1/pricefeed').catch(()=>null)]);
       if(!p0||!Array.isArray(p0.data))throw new Error('unexpected response');
@@ -1025,7 +1025,7 @@ const lmid=p=>{if(!p)return null;const b=lnum(p.bestBid),a=lnum(p.bestAsk);if(b!
 const lusd=v=>{v=+v||0;return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e4?'$'+Math.round(v/1e3)+'k':v>=1e3?'$'+(v/1e3).toFixed(1)+'k':'$'+Math.round(v);};
 const lspot=v=>v>=1000?'$'+(+v).toLocaleString('en-US',{maximumFractionDigits:0}):v>=1?'$'+(+v).toFixed(2):'$'+(+v).toPrecision(3);
 function plain(doc){if(!doc)return '';if(typeof doc==='string')return doc;let out='';(function walk(n){if(!n)return;if(n.value)out+=n.value;(n.content||[]).forEach(walk);if(n.nodeType==='paragraph')out+='\n';})(doc);return out.replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').trim();}
-function favourite(e){const cs=(e.contracts||[]).filter(c=>c.status==='active'&&c.prices&&lmid(c.prices)!=null);return cs.length?cs.reduce((a,b)=>lmid(b.prices)>lmid(a.prices)?b:a):null;}
+function favourite(e){const cs=(e.contracts||[]).filter(c=>c.status==='active'&&c.prices&&lmid(c.prices)!=null);if(!cs.length)return null;const traded=cs.filter(c=>c.prices.lastTradePrice!=null);const pool=traded.length?traded:cs;return pool.reduce((a,b)=>lmid(b.prices)>lmid(a.prices)?b:a);}
 function closesIn(iso){if(!iso)return '—';const ms=Date.parse(iso)-Date.now();if(ms<=0)return 'closing';const h=ms/36e5;if(h<1)return Math.max(1,Math.round(ms/6e4))+'m';if(h<48)return Math.round(h)+'h';return Math.round(h/24)+'d';}
 const ltitle=t=>t.replace(/^Highest temperature in /,'High temp, ').replace(/ on (January|February|March|April|May|June|July|August|September|October|November|December) \d+, \d{4}\??$/,'').replace(/\?$/,'');
 
