@@ -1063,10 +1063,10 @@ probC.setAttribute('aria-describedby','probFoot');
 function probTable(){const m=MARKETS[term.market];$('#probTable').innerHTML=term.series.slice().reverse().map(d=>`<tr><td class="mono">${ptLabel(d,true)}</td><td class="num">${(d.p*100).toFixed(1)}¢${m.live?' (Gemini Exchange close)':d.ago===0?' (captured)':' (fixture)'}</td></tr>`).join('');}
 function renderProb(){const m=MARKETS[term.market];term.cursor=null;
   if(!m.live){term.series=makeSeries(term.market,term.tf);drawProb();probTable();return;}
-  const key=m.symbol+term.tf;term.series=[];term.msg='Loading Gemini Exchange candles…';drawProb();probTable();
+  const key=m.symbol+term.tf;term.series=[];term.foot='';term.msg='Loading Gemini Exchange candles…';drawProb();probTable();
   if(!m.symbol){term.msg='This contract has no instrument symbol, so no candles.';drawProb();return;}
   const [tf,n]=CTF[term.tf];gxCandles(m.symbol,tf,n).then(v=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key)return;
-    term.series=v.map(d=>({p:d.c,t:d.t,ago:0}));term.msg=v.length<2?'Not enough trading history for this timeframe yet.':'';const traded=v.filter(d=>d.v>0).length;$('#probFoot').textContent=v.length?`Closing price of each Gemini Exchange candle. Trades in ${traded} of ${v.length} periods${traded<v.length/2?'; flat stretches mean no trades, so the last price carries forward':''}. The band is the live bid–ask.`:$('#probFoot').textContent;drawProb();probTable();})
+    term.series=v.map(d=>({p:d.c,t:d.t,ago:0}));term.msg=v.length<2?'Not enough trading history for this timeframe yet.':'';const traded=v.filter(d=>d.v>0).length;term.foot=v.length?`Closing price of each Gemini Exchange candle. Trades in ${traded} of ${v.length} periods${traded<v.length/2?'; flat stretches mean no trades, so the last price carries forward':''}. The band is the live bid–ask.`:'';if(term.foot)$('#probFoot').textContent=term.foot;drawProb();probTable();})
    .catch(e=>{term.msg=e.message==='NoDataFound'?'No trades on this contract in this timeframe yet, so there are no candles. The quote above is live.':'Candles unavailable right now ('+e.message+').';drawProb();});}
 $$('#tfSeg button').forEach(b=>b.addEventListener('click',()=>{term.tf=b.dataset.tf;$$('#tfSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderProb();}));
 if('ResizeObserver'in window)new ResizeObserver(()=>drawProb()).observe(probW);
@@ -1235,7 +1235,8 @@ function renderStats(){
 }
 const ANCHOR={user:false};['wheel','touchstart','keydown','mousedown'].forEach(ev=>addEventListener(ev,()=>{ANCHOR.user=true;},{passive:true,once:true}));
 let anchorTarget=null;$$('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{anchorTarget=a.getAttribute('href');ANCHOR.user=false;setTimeout(()=>{anchorTarget=null;},4000);}));
-function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(el)requestAnimationFrame(()=>el.scrollIntoView({block:'start'}));}
+function keepAnchor(){const id=anchorTarget||(!ANCHOR.user&&location.hash);if(!id||id==='#top'||id.length<2)return;const el=document.querySelector(id);if(!el)return;requestAnimationFrame(()=>{const y=el.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);if(Math.abs(scrollY-y)>8)scrollTo({top:y,behavior:'instant'});});}
+[300,1200,2500,5000].forEach(t=>setTimeout(keepAnchor,t));if(document.fonts)document.fonts.ready.then(keepAnchor);
 LIVE.on(()=>{const first=!BOARD.rendered;if(LIVE.events.length){renderBoard(false);BOARD.rendered=true;if(first)keepAnchor();}else if(LIVE.err&&!LIVE.lastOk){$('#topicPanel').innerHTML='<p class="empty">Live markets could not be loaded. The page will keep retrying; the analysed Nov 18 markets below still work.</p>';}renderStats();});
 setInterval(()=>{if(LIVE.lastOk)renderStats();},5000);
 /* ---------- Ticker: live Gemini Exchange prediction markets ---------- */
@@ -1359,7 +1360,7 @@ function renderTerm(light){
   $$('#flagList .flag>button').forEach(b=>{if(light&&openF.has(b.textContent)){b.setAttribute('aria-expanded','true');$('#'+b.getAttribute('aria-controls')).classList.add('open');}});$$('#flagList .flag>button').forEach(b=>b.addEventListener('click',()=>{const o=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',o);$('#'+b.getAttribute('aria-controls')).classList.toggle('open',o);}));
   $('#purchaseList').innerHTML=(m.live?livePurch(m):PURCH[m.key]).map(p=>`<div class="purchase"><span>${p.t}</span><span class="num">${p.p} USDC</span><span class="meta"><span class="tag ${p.state[0]}">${p.state[1]}</span> <code class="mono" style="font-size:.7rem">${p.id}</code><br>${p.meta}</span></div>`).join('');
   const pb=$('#probBadge'),cb=$('#candleBadge');pb.className=cb.className=m.live?'real':'demo';pb.textContent=m.live?'GEMINI EXCHANGE CANDLES':'DEMO FIXTURE PATH';cb.textContent=m.live?'GEMINI EXCHANGE':'DEMO FIXTURE';
-  $('#probFoot').textContent=m.live?'Closing price of each Gemini Exchange candle for the contract shown. The band is the live bid–ask.':'The path ends at the real captured mid. Earlier points are a deterministic demo fixture.';
+  if(!light||!m.live)$('#probFoot').textContent=m.live?(term.foot||'Closing price of each Gemini Exchange candle for the contract shown. The band is the live bid–ask.'):'The path ends at the real captured mid. Earlier points are a deterministic demo fixture.';
   $('#candleFoot').textContent=m.live?'Real 5-minute candles and live top of book. Order-book depth is not public.':'Top of book is real; candles and depth beyond it are fixtures.';
   $('#mktQ').textContent=m.question;if(typeof gaiSyncMarket==='function')gaiSyncMarket();
   renderMarketPanel(m);
@@ -1370,11 +1371,11 @@ function renderMarketPanel(m){const dl=$('#mktDetails'),tb=$('#mktOutcomes');if(
   const row=(k,v)=>v==null||v===''?'':`<dt>${k}</dt><dd>${v}</dd>`;const when=iso=>iso?new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' ('+closesIn(iso)+')':null;
   if(m.live){const e=m.e,c=m.c,p=c.prices||{};const b=lnum(p.bestBid),a=lnum(p.bestAsk);
     $('#mktSrc').textContent='live · Gemini Exchange · '+new Date(LIVE.lastOk||Date.now()).toLocaleTimeString();
-    dl.innerHTML=row('Event',esc(e.title))+row('Category',esc([e.category,e.subcategory].filter(Boolean).join(' · ')))+row('Ticker','<span class="mono">'+esc(e.ticker)+'</span>')
+    dl.innerHTML=row('Event',esc(e.title))+row('Category',esc([e.category,typeof e.subcategory==='string'?e.subcategory:(e.subcategory&&(e.subcategory.name||e.subcategory.label||e.subcategory.title))].filter(Boolean).join(' · ')))+row('Ticker','<span class="mono">'+esc(e.ticker)+'</span>')
       +row('Selected outcome',esc(c.label))+row('Bid / ask',b!=null||a!=null?`<span class="num">${b!=null?(b*100).toFixed(0)+'¢':'—'} / ${a!=null?(a*100).toFixed(0)+'¢':'—'}${b!=null&&a!=null?' · spread '+Math.round((a-b)*100)+'¢':''}</span>`:'No live quote')
       +row('Last trade',p.lastTradePrice!=null?'<span class="num">'+(+p.lastTradePrice*100).toFixed(1)+'¢</span>':'No trades yet')
       +row('Volume','<span class="num">'+lusd(e.volume)+' total · '+lusd(e.volume24h)+' in 24h</span>')
-      +row('Closes',when(c.expiryDate||e.expiryDate))+row('Starts',e.startTime?when(e.startTime):null)
+      +row('Closes',when(c.expiryDate||e.expiryDate))+row('Starts',e.startTime?(Date.parse(e.startTime)<=Date.now()?new Date(e.startTime).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' (started)':when(e.startTime)):null)
       +row('Settlement source',e.sourceDetails?esc(Object.values(e.sourceDetails).join(' · ')):null)
       +row('Rules',e.termsLink||c.termsAndConditionsUrl?`<a href="${esc(e.termsLink||c.termsAndConditionsUrl)}" target="_blank" rel="noopener">Terms PDF</a>`:'No terms link')
       +row('Outcomes',String((e.contracts||[]).length));
