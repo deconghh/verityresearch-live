@@ -440,6 +440,11 @@ a.tick-item:hover .sym{color:var(--text-primary)}
 @media (max-width:640px){.cgrid{grid-template-columns:1fr 1fr}}
 .sel{min-height:34px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--radius-element);padding:0 10px;font-size:.82rem;max-width:min(100%,360px);color:var(--text-primary)}
 .coin-stage{margin-top:8px}
+.hero h1.board-title{font-size:clamp(1.25rem,1.7vw,1.6rem);line-height:1.25;letter-spacing:-.01em;max-width:none;font-weight:600}
+.mlist-cols{grid-template-columns:7ch 9ch 7ch 6ch}.mrow-btn{grid-template-columns:auto 1fr 7ch 9ch 7ch 6ch}
+.mlist-cols span{white-space:nowrap}
+.mrow-px.last::after{content:" last";font-size:.62rem;color:var(--text-muted)}
+@media (max-width:640px){.mrow-btn{grid-template-columns:1fr 9ch 6ch}.mlist-cols{grid-template-columns:9ch 6ch}}
 </style>
 </head>
 <body>
@@ -1081,7 +1086,7 @@ function rowHTML({e,c}){const m=lmid(c.prices),b=lnum(c.prices.bestBid),a=lnum(c
   return `<li class="mrow" data-ev="${esc(e.ticker)}" data-c="${esc(c.id)}"><button class="mrow-btn" aria-label="Analyze ${esc(e.title)}, ${esc(lab)}">
    <span class="mrow-cat">${esc(e.category||'')}</span>
    <span class="mrow-t"><span class="mrow-title">${esc(ltitle(e.title))}</span><span class="mrow-out">${esc(lab)}</span></span>
-   <span class="mrow-px num" data-px>${(m*100).toFixed(1)}¢</span>
+   <span class="mrow-px num${b==null||a==null?' last':''}" data-px title="${b==null||a==null?'No live quote; last trade':'Mid of bid and ask'}">${(m*100).toFixed(1)}¢</span>
    <span class="mrow-ba num">${b!=null?Math.round(b*100):'—'} / ${a!=null?Math.round(a*100):'—'}</span>
    <span class="mrow-v num">${lusd(e.volume24h)}</span>
    <span class="mrow-x num">${closesIn(c.expiryDate||e.expiryDate)}</span></button></li>`;}
