@@ -793,7 +793,7 @@ html.demo-mode .signin,html.signed-in .signout{display:inline-flex}
       <div class="lp-strip" id="lpStrip" aria-label="Live prediction markets"><div class="lp-strip-track" id="lpStripTrack"></div></div>
       <div class="lp-wrap lp-stats" id="lpStats">
         <div><span class="lp-s-v" id="lpStatMarkets">—</span><span class="lp-s-l">active prediction markets</span></div>
-        <div><span class="lp-s-v" id="lpStatVol">—</span><span class="lp-s-l">traded across them, all time</span></div>
+        <div><span class="lp-s-v" id="lpStatVol">—</span><span class="lp-s-l">traded on the first 100 listed</span></div>
         <div><span class="lp-s-v" id="lpStatTop">—</span><span class="lp-s-l" id="lpStatTopL">most traded market</span></div>
       </div>
     </section>
@@ -909,8 +909,8 @@ document.addEventListener('verity:landing',function(){
       document.getElementById('lpStripTrack').innerHTML=items+items;
       document.getElementById('lpStatMarkets').textContent=total;
       var vol=ev.reduce(function(s,e){return s+(+e.volume||0);},0);document.getElementById('lpStatVol').textContent=money(vol);
-      document.getElementById('lpStatVol').nextElementSibling.textContent='traded across the '+ev.length+' listed here, all time';
-      if(rows[0]){document.getElementById('lpStatTop').textContent=money(rows[0].v);document.getElementById('lpStatTopL').textContent='traded on '+title(rows[0].e.title);}
+      document.getElementById('lpStatVol').nextElementSibling.textContent='traded on the first '+ev.length+' listed';
+      if(rows[0]){document.getElementById('lpStatTop').textContent=money(rows[0].v);document.getElementById('lpStatTopL').textContent='traded on '+title(rows[0].e.title)+', the busiest of those';}
       st.className='tick-status live';st.innerHTML='<span class="dot" aria-hidden="true"></span>Live · updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · <a href="https://api.gemini.com/v1/prediction-markets/events?status=active" target="_blank" rel="noopener noreferrer">source</a>';
     }).catch(function(e){st.className='tick-status stale';st.textContent='Gemini Exchange is not answering right now ('+e.message+'). The demo will keep retrying.';});}
   load();timer=setInterval(load,30000);
