@@ -776,6 +776,7 @@ html.demo-mode .signin,html.signed-in .signout{display:inline-flex}
 .tick-status.model{color:var(--model)}
 .model-key{display:inline-flex;align-items:center;gap:6px;color:var(--model)}
 .model-key::before{content:"";width:18px;border-top:2px dashed var(--model)}
+.real.model-badge{background:rgba(183,148,246,.14);color:var(--model)}
 </style>
 </head>
 <body>
@@ -1665,8 +1666,10 @@ function drawModel(x,w,h,pad,m){const md=term.model,V='#B794F6';const pts=md.ser
   else{const y=Y(md.level);x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);}
   x.stroke();x.setLineDash([]);
   const last=pts.length?pts[pts.length-1].p:md.level,ly=Y(last);x.fillStyle=V;x.fillRect(w-pad.r+4,ly-9,pad.r-6,18);x.fillStyle='#0B0F17';x.textAlign='center';x.textBaseline='middle';x.font='600 11px "JetBrains Mono",monospace';x.fillText((last*100).toFixed(1),w-pad.r+4+(pad.r-6)/2,ly);
-  x.font='600 12px "Space Grotesk",sans-serif';x.textAlign='left';x.textBaseline='top';x.fillStyle=V;x.fillText(md.label+', not market data',pad.l+8,pad.t+4);
-  x.font='12px "Space Grotesk",sans-serif';x.fillStyle='#8B9BB4';x.fillText('No trades on this contract yet.',pad.l+8,pad.t+22);}
+  const l1=md.label+', not market data',l2='No trades on this contract yet.';x.textAlign='left';x.textBaseline='top';
+  x.font='600 12px "Space Grotesk",sans-serif';const bw=Math.max(x.measureText(l1).width,(x.font='12px "Space Grotesk",sans-serif',x.measureText(l2).width))+16;
+  x.fillStyle='rgba(11,15,23,.88)';x.fillRect(pad.l+4,pad.t+2,bw,38);x.strokeStyle='rgba(183,148,246,.35)';x.lineWidth=1;x.strokeRect(pad.l+4.5,pad.t+2.5,bw-1,37);
+  x.font='600 12px "Space Grotesk",sans-serif';x.fillStyle=V;x.fillText(l1,pad.l+12,pad.t+7);x.font='12px "Space Grotesk",sans-serif';x.fillStyle='#8B9BB4';x.fillText(l2,pad.l+12,pad.t+23);}
 function drawProb(){
   const {x,w,h}=fitCanvas(probC);const pad={l:44,r:56,t:16,b:28};const s=term.series,m=MARKETS[term.market];
   x.clearRect(0,0,w,h);
@@ -1758,7 +1761,7 @@ async function quoteModel(m){let obs=[];
   const pr=m.c&&m.c.prices||{};if(pr.bestBid!=null&&pr.bestAsk!=null)return {kind:'level',level:(+pr.bestBid + +pr.bestAsk)/2,series:[],label:'Quote estimate',note:'Current midpoint of the live bid and ask. Nobody has traded this contract yet and no quotes are recorded, so this is a single reading, not a history.',src:histUrl(m.symbol,'1m'),srcName:'Gemini Exchange quote'};
   return null;}
 async function buildModel(m){try{return (await cryptoModel(m).catch(()=>null))||(await quoteModel(m));}catch(e){return null;}}
-function showModel(m,key){term.model=null;buildModel(m).then(md=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key||term.series.length>=2)return;term.model=md;drawProb();probMeta();});}
+function showModel(m,key){term.model=null;buildModel(m).then(md=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key||term.series.length>=2)return;term.model=md;if(md){const b=$('#probBadge');if(b){b.textContent='Model estimate';b.className='real model-badge';}}drawProb();probMeta();});}
 function loadHist(refresh){const m=MARKETS[term.market];const key=m.symbol+term.tf;const win=WINMS[term.tf]||Infinity;HIST.url=histUrl(m.symbol,'1m');
   if(refresh)HIST_RES.forEach(tf=>candleCache.delete(m.symbol+'|'+tf));
   gxHistory(m.symbol).then(h=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key)return;
