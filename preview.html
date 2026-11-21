@@ -1701,7 +1701,7 @@ function loadHist(refresh){const m=MARKETS[term.market];const key=m.symbol+term.
    .catch(e=>{const mm=MARKETS[term.market];if(!mm.live||mm.symbol+term.tf!==key)return;
     if(refresh&&term.series.length>1){HIST.state='stale';HIST.err=e.message;probMeta();return;}
     HIST.state='empty';HIST.err=e.message==='NoDataFound'?'no trades on this contract yet':'history unavailable ('+e.message+')';
-    term.msg=e.message==='NoDataFound'?'No trades on this contract yet, so Gemini Exchange has no price history for it. The quote above is live.':'Candles unavailable right now ('+e.message+'). Retrying every minute.';drawProb();probMeta();});}
+    term.series=[];$('#probFoot').textContent='';term.msg=e.message==='NoDataFound'?'No trades on this contract yet, so Gemini Exchange has no price history for it. The quote above is live.':'Candles unavailable right now ('+e.message+'). Retrying every minute.';drawProb();probMeta();});}
 function renderProb(){const m=MARKETS[term.market];term.cursor=null;
   if(!m.live){HIST.state='demo';term.series=makeSeries(term.market,term.tf);drawProb();probTable();probMeta();histSchedule();return;}
   term.series=[];term.foot='';term.msg='Loading Gemini Exchange candles…';HIST.state='loading';HIST.fetched=0;HIST.newest=0;drawProb();probTable();
