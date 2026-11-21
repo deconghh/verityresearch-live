@@ -64,7 +64,7 @@ th{color:var(--text-muted);font-weight:500}
 <li>Voice is optional and starts only when you press Start voice and allow the microphone. Calls last at most 60 seconds.</li>
 <li>Your voice is streamed to ElevenLabs, which runs the voice agent. The agent uses ElevenLabs' zero-retention mode, so the audio and the words of the call (transcript and summary) are not kept after the call. Verity does not record calls.</li>
 <li>ElevenLabs does keep a record of each call without its content: start time, length, number of turns, cost and your browser's time zone. It stays in Verity's ElevenLabs workspace until the Verity team deletes it.</li>
-<li>No call data is forwarded anywhere else. The workspace has no webhooks and no storage export destination.</li>
+<li>Verity hasn’t configured ElevenLabs to forward call data through webhooks or storage exports.</li>
 <li>During a call the agent can read the market you have open and look up public Gemini market data.</li>
 <li>To enforce call limits, Verity stores keyed hashes of your IP address, account and browser, and sets <code>__Host-verity-voice-browser</code> and <code>__Host-verity-voice-guest</code> cookies. No audio, raw IP address or raw account ID is stored.</li>
 </ul>
