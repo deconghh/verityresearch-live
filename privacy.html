@@ -41,7 +41,7 @@ th{color:var(--text-muted);font-weight:500}
 <ul>
 <li>Market prices load from Gemini's public API (<code>api.gemini.com</code>) directly in your browser, so Gemini sees your IP address for those requests.</li>
 <li>Fonts come from Google Fonts and some scripts from cdnjs (Cloudflare). Those services see your IP address when they serve the files.</li>
-<li>The site keeps the market you picked in your browser's session storage. It is never sent to Verity and is cleared when you close the tab.</li>
+<li>Selecting a market only stores your choice in this tab's session storage, which is cleared when you close the tab. If you request an AI review, forecast or answer, or start a voice call, Verity sends the selected market's public data to the AI provider, as described below.</li>
 </ul>
 
 <h2>Signing in</h2>
@@ -62,7 +62,9 @@ th{color:var(--text-muted);font-weight:500}
 <h2>Voice calls</h2>
 <ul>
 <li>Voice is optional and starts only when you press Start voice and allow the microphone. Calls last at most 60 seconds.</li>
-<li>Your voice is streamed to ElevenLabs, which runs the voice agent. The agent runs in ElevenLabs' zero-retention mode, so ElevenLabs does not keep the call's audio or transcript after the call. Verity does not record calls.</li>
+<li>Your voice is streamed to ElevenLabs, which runs the voice agent. The agent uses ElevenLabs' zero-retention mode, so the audio and the words of the call (transcript and summary) are not kept after the call. Verity does not record calls.</li>
+<li>ElevenLabs does keep a record of each call without its content: start time, length, number of turns, cost and your browser's time zone. It stays in Verity's ElevenLabs workspace until the Verity team deletes it.</li>
+<li>No call data is forwarded anywhere else. The workspace has no webhooks and no storage export destination.</li>
 <li>During a call the agent can read the market you have open and look up public Gemini market data.</li>
 <li>To enforce call limits, Verity stores keyed hashes of your IP address, account and browser, and sets <code>__Host-verity-voice-browser</code> and <code>__Host-verity-voice-guest</code> cookies. No audio, raw IP address or raw account ID is stored.</li>
 </ul>
