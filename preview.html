@@ -2510,8 +2510,8 @@ async function runResearch(q,auto){q=(q||'').trim()||'crypto market trends bitco
   finally{RES.busy=false;btn.removeAttribute('aria-busy');}}
 (function resInit(){$('#resForm').addEventListener('submit',e=>{e.preventDefault();runResearch($('#resQ').value);});
   $$('#resChips button').forEach(b=>b.addEventListener('click',()=>{$('#resQ').value=b.dataset.q;runResearch(b.dataset.q);}));
-  onVisible($('#resList'),v=>{if(v&&!RES.q)runResearch('',true);});
-  (window.VERITY_GATE||Promise.resolve()).then(()=>setTimeout(()=>{if(!RES.q)runResearch('',true);},3000));})(); // don't rely only on the visibility observer
+  // No automatic search: it would trigger the human check before anyone asked for anything.
+  $('#resList').innerHTML='<li class="empty">Search recent coverage above, or pick a topic.</li>';const st=$('#resStatus');st.className='tick-status';st.textContent='Exa search';})(); // don't rely only on the visibility observer
 
 /* Research for the market selected in the terminal (AI panel) */
 async function runMarketResearch(){const m=MARKETS[term.market];const out=$('#gaiOut');const btn=$('#mresRun');
