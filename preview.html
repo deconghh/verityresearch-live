@@ -1679,11 +1679,11 @@ function histSchedule(){clearInterval(HIST.timer);HIST.timer=0;const m=MARKETS[t
    first trade, so most prediction markets have hours of history, not days. Fetch every resolution and stitch:
    1-minute candles for the recent part, then 5m, 15m, 1hr, 6hr and 1day only for stretches older than the finer data. */
 const WINMS={'1H':36e5,'24H':864e5,'7D':6048e5,'30D':2592e6,'ALL':Infinity};
-const HIST_RES=['1m','5m','15m','1hr','6hr','1day'];
+const HIST_RES=['1m','5m','15m','1hr','6hr','1day']; // a coarser candle is used only if it ends before the finer data starts
 async function gxHistory(sym){const parts=await Promise.all(HIST_RES.map(tf=>gxCandles(sym,tf,5000).then(v=>({tf,v})).catch(e=>({tf,v:[],err:e.message}))));
   const errs=parts.filter(p=>p.err);if(errs.length===parts.length)throw new Error(errs[0].err);
   let out=[],cut=Infinity;const used=[];
-  parts.forEach(p=>{const span=TFMS[p.tf]||0,older=p.v.filter(d=>cut===Infinity||d.t+span<=cut).map(d=>Object.assign({},d,{tf:p.tf})); // a coarser candle is used only if it ends before the finer data startsif(older.length){out=older.concat(out);used.push(p.tf);cut=older[0].t;}});
+  parts.forEach(p=>{const span=TFMS[p.tf]||0,older=p.v.filter(d=>cut===Infinity||d.t+span<=cut).map(d=>Object.assign({},d,{tf:p.tf}));if(older.length){out=older.concat(out);used.push(p.tf);cut=older[0].t;}});
   return {v:out,used,first:out.length?out[0].t:0,fine:used[0]||'1m'};}
 function bucket(v,max){if(v.length<=max)return v;const t0=v[0].t,t1=v[v.length-1].t,w=(t1-t0)/max,out=[];let cur=null,k=-1;
   v.forEach(d=>{const i=Math.min(max-1,Math.floor((d.t-t0)/w));if(i!==k){if(cur)out.push(cur);cur={t:d.t,o:d.o,h:d.h,l:d.l,c:d.c,v:d.v};k=i;}else{cur.c=d.c;cur.h=Math.max(cur.h,d.h);cur.l=Math.min(cur.l,d.l);cur.v+=d.v;cur.t=d.t;}});
