@@ -1670,7 +1670,7 @@ function probMeta(){const el=$('#probMeta');if(!el)return;const m=MARKETS[term.m
   const st={live:['live','<span class="dot" aria-hidden="true"></span>Live history'],stale:['stale','Stale history'],empty:['stale','No history'],loading:['','Loading history…']}[HIST.state]||['','—'];
   const when=t=>new Date(t).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',timeZoneName:'short'});
   const bits=[];if(HIST.fetched)bits.push('Fetched '+when(HIST.fetched));if(HIST.newest)bits.push('newest candle '+when(HIST.newest));
-  if(HIST.first)bits.push('history starts at the first trade, '+when(HIST.first)+(HIST.short?', so this view shows all of it':''));
+  if(HIST.first)bits.push('oldest candle starts '+when(HIST.first)+(HIST.short?', so this view shows the whole history':''));
   if(HIST.state==='stale')bits.push(HIST.err?'last refresh failed, showing the previous fetch':'no new candle for several periods');
   if(HIST.state==='empty')bits.push(HIST.err||'no candles for this timeframe');
   el.innerHTML=`<span class="tick-status ${st[0]}" role="status">${st[1]}</span><span>${esc(bits.join(' · '))}</span><span>Source: <a href="${esc(HIST.url)}" target="_blank" rel="noopener noreferrer">Gemini Exchange public API, ${esc(m.symbol||'')} candles</a>. Market-implied probability only; the resolution-risk rating beside it is scored separately from the rules.</span>`;}
