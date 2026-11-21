@@ -1654,14 +1654,14 @@ function fmtAgo(ms){if(ms===0)return 'snapshot';const m=Math.round(ms/60e3);if(m
 const probC=$('#probChart'),probW=$('#probWrap'),tip=$('#probTip');
 function drawModel(x,w,h,pad,m){const md=term.model,V='#B794F6';const pts=md.series;probC._X=null;tip.classList.remove('on');
   const vals=(pts.length?pts.map(d=>d.p):[md.level]).concat([m.bid,m.ask].filter(v=>v!=null));let lo=Math.min(...vals),hi=Math.max(...vals);const span=Math.max(.08,hi-lo);lo=Math.max(0,lo-span*.25);hi=Math.min(1,hi+span*.25);
-  const Y=p=>pad.t+(h-pad.t-pad.b)*(1-(p-lo)/(hi-lo)),X=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,pts.length-1);
+  const Y=p=>pad.t+(h-pad.t-pad.b)*(1-(Math.min(hi,Math.max(lo,p))-lo)/(hi-lo)),t0=pts.length?pts[0].t:0,t1=pts.length?pts[pts.length-1].t:1,X=i=>pad.l+(w-pad.l-pad.r)*((pts[i].t-t0)/Math.max(1,t1-t0));
   x.font='11px "JetBrains Mono",monospace';x.textBaseline='middle';const step=span>.3?.1:span>.12?.05:.02;
   for(let g=Math.ceil(lo/step)*step;g<=hi+1e-9;g+=step){const y=Y(g);x.strokeStyle='#1E2738';x.lineWidth=1;x.beginPath();x.moveTo(pad.l,Math.round(y)+.5);x.lineTo(w-pad.r,Math.round(y)+.5);x.stroke();x.fillStyle='#8B9BB4';x.textAlign='right';x.fillText((g*100).toFixed(0)+'¢',pad.l-8,y);}
   if(m.bid!=null&&m.ask!=null&&m.ask>m.bid){x.fillStyle='rgba(183,148,246,.10)';x.fillRect(pad.l,Y(m.ask),w-pad.l-pad.r,Y(m.bid)-Y(m.ask));}
   x.strokeStyle=V;x.lineWidth=2;x.setLineDash([7,5]);x.beginPath();
   if(pts.length>=2){x.moveTo(X(0),Y(pts[0].p));for(let i=1;i<pts.length;i++)x.lineTo(X(i),Y(pts[i].p));
     const ticks=w<480?3:5;
-    x.textAlign='center';x.textBaseline='top';x.fillStyle='#8B9BB4';const long=pts[pts.length-1].t-pts[0].t>72e6;for(let k=0;k<=ticks;k++){const i=Math.round((pts.length-1)*k/ticks);x.fillText(tLabel(pts[i].t,long),Math.min(w-pad.r-16,Math.max(pad.l+16,X(i))),h-pad.b+8);}}
+    x.textAlign='center';x.textBaseline='top';x.fillStyle='#8B9BB4';const long=pts[pts.length-1].t-pts[0].t>72e6;for(let k=0;k<=ticks;k++){const tt=t0+(t1-t0)*k/ticks,xx=pad.l+(w-pad.l-pad.r)*k/ticks;x.fillText(tLabel(tt,long),Math.min(w-pad.r-16,Math.max(pad.l+16,xx)),h-pad.b+8);}}
   else{const y=Y(md.level);x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);}
   x.stroke();x.setLineDash([]);
   const last=pts.length?pts[pts.length-1].p:md.level,ly=Y(last);x.fillStyle=V;x.fillRect(w-pad.r+4,ly-9,pad.r-6,18);x.fillStyle='#0B0F17';x.textAlign='center';x.textBaseline='middle';x.font='600 11px "JetBrains Mono",monospace';x.fillText((last*100).toFixed(1),w-pad.r+4+(pad.r-6)/2,ly);
@@ -1747,7 +1747,7 @@ async function cryptoModel(m){const e=m.e,c=m.c,k=c.strike;if(!k||!/^(above|belo
   const r=[];for(let i=1;i<h.length;i++)if(h[i].c>0&&h[i-1].c>0)r.push(Math.log(h[i].c/h[i-1].c));
   const mu=r.reduce((a,b)=>a+b,0)/r.length,sig=Math.sqrt(r.reduce((a,b)=>a+(b-mu)**2,0)/(r.length-1))*Math.sqrt(24*365);if(!(sig>0))return null;
   const K=+k.value,prob=(S,t)=>{const tau=Math.max(6e4,T-t)/(365*864e5),d2=(Math.log(S/K)-.5*sig*sig*tau)/(sig*Math.sqrt(tau)),a=ncdf(d2);return Math.min(.995,Math.max(.005,k.type==='below'?1-a:a));};
-  const start=f.length?f[0].t:Infinity,pts=h.slice(-48).filter(d=>d.t+36e5<=start).concat(f);const spot=pts[pts.length-1].c;
+  const ok=d=>d.c>0&&isFinite(d.c),f2=f.filter(ok),start=f2.length?f2[0].t:Infinity,pts=h.filter(ok).slice(-48).filter(d=>d.t+36e5<=start).concat(f2);const spot=pts[pts.length-1].c;
   return {kind:'crypto',series:pts.map(d=>({t:d.t,p:prob(d.c,d.t)})),label:'Model estimate',
     note:`Lognormal model on Gemini Exchange ${tk} spot (${pair.toUpperCase()}): spot ${fmtUsd(spot)}, strike ${fmtUsd(K)} ${k.type}, ${Math.round(sig*100)}% yearly volatility from 7 days of hourly candles, no drift.`,
     src:'https://api.gemini.com/v2/candles/'+pair+'/1hr',srcName:'Gemini Exchange '+pair.toUpperCase()+' candles'};}
