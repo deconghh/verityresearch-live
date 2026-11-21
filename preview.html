@@ -1662,7 +1662,7 @@ probC.addEventListener('keydown',e=>{const n=term.series.length;if(e.key==='Arro
 probC.addEventListener('blur',()=>{term.cursor=null;drawProb();});
 probC.setAttribute('aria-describedby','probFoot');
 function probTable(){const m=MARKETS[term.market];$('#probTable').innerHTML=term.series.slice().reverse().map(d=>`<tr><td class="mono">${ptLabel(d,true)}</td><td class="num">${(d.p*100).toFixed(1)}¢${m.live?' (Gemini Exchange close)':d.ago===0?' (captured)':' (fixture)'}</td></tr>`).join('');}
-const TFMS={'1m':6e4,'15m':9e5,'1hr':36e5,'6hr':216e5,'1day':864e5};
+const TFMS={'1m':6e4,'5m':3e5,'15m':9e5,'1hr':36e5,'6hr':216e5,'1day':864e5};
 const HIST={state:'demo',fetched:0,newest:0,url:'',err:'',timer:0,vis:false};
 function histUrl(sym,tf){return 'https://api.gemini.com/v2/candles/'+encodeURIComponent(sym.toLowerCase())+'/'+tf;}
 function probMeta(){const el=$('#probMeta');if(!el)return;const m=MARKETS[term.market];
@@ -1683,7 +1683,7 @@ const HIST_RES=['1m','5m','15m','1hr','6hr','1day'];
 async function gxHistory(sym){const parts=await Promise.all(HIST_RES.map(tf=>gxCandles(sym,tf,5000).then(v=>({tf,v})).catch(e=>({tf,v:[],err:e.message}))));
   const errs=parts.filter(p=>p.err);if(errs.length===parts.length)throw new Error(errs[0].err);
   let out=[],cut=Infinity;const used=[];
-  parts.forEach(p=>{const older=p.v.filter(d=>d.t<cut).map(d=>Object.assign({},d,{tf:p.tf}));if(older.length){out=older.concat(out);used.push(p.tf);cut=older[0].t;}});
+  parts.forEach(p=>{const span=TFMS[p.tf]||0,older=p.v.filter(d=>cut===Infinity||d.t+span<=cut).map(d=>Object.assign({},d,{tf:p.tf})); // a coarser candle is used only if it ends before the finer data startsif(older.length){out=older.concat(out);used.push(p.tf);cut=older[0].t;}});
   return {v:out,used,first:out.length?out[0].t:0,fine:used[0]||'1m'};}
 function bucket(v,max){if(v.length<=max)return v;const t0=v[0].t,t1=v[v.length-1].t,w=(t1-t0)/max,out=[];let cur=null,k=-1;
   v.forEach(d=>{const i=Math.min(max-1,Math.floor((d.t-t0)/w));if(i!==k){if(cur)out.push(cur);cur={t:d.t,o:d.o,h:d.h,l:d.l,c:d.c,v:d.v};k=i;}else{cur.c=d.c;cur.h=Math.max(cur.h,d.h);cur.l=Math.min(cur.l,d.l);cur.v+=d.v;cur.t=d.t;}});
